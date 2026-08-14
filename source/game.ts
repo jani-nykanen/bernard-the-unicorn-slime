@@ -43,8 +43,7 @@ export class Game implements Scene {
 
     public redraw(canvas : RenderTarget, assets : AssetManager) : void {
         
-        //canvas.setDrawColor(...MASTER_PALETTE[2]);
-        canvas.setDrawColor(0, 85, 170);
+        canvas.setDrawColor(...MASTER_PALETTE[3]);
         canvas.clear();
 
         this.stage?.draw(canvas, assets);

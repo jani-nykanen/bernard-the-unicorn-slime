@@ -28,7 +28,7 @@ export class Stage {
     }
 
 
-    private drawHeightmap(canvas : RenderTarget, bmp : Bitmap) : void {
+    private drawHeightmap(canvas : RenderTarget, bmp : Bitmap, screenBottom : number) : void {
 
         const shiftx : number = (this.width/2) | 0;
         const shiftz : number = (this.depth/2) | 0;
@@ -54,10 +54,13 @@ export class Stage {
                 if (difz > 0) {
 
                     const top : number = dy + 7;
-                    const bottom : number = dy + 16 + (difz - 1)*12;
+                    const bottom : number = bottomLeft < 0 ? screenBottom :  dy + 16 + (difz - 1)*12;
 
                     canvas.drawBitmap(bmp, Flip.None, dx, top, 24, 0, 12, 8);
-                    canvas.drawBitmap(bmp, Flip.None, dx, bottom, 24, 8, 12, 8);
+                    if (bottomLeft >= 0) {
+
+                        canvas.drawBitmap(bmp, Flip.None, dx, bottom, 24, 8, 12, 8);
+                    }
 
                     const h : number = Math.max(1, bottom - top - 8);
                     canvas.setDrawColor(...MASTER_PALETTE[1]);
@@ -66,18 +69,22 @@ export class Stage {
                 // Top left shade
                 if (y - topLeft > 0) {
 
+                    const h : number = topLeft < 0 ? screenBottom - dy : (y - topLeft)*12;
                     canvas.setDrawColor(...MASTER_PALETTE[0]);
-                    canvas.fillRect(dx, dy + 6, 1, (y - topLeft)*12);
+                    canvas.fillRect(dx, dy + 6, 1, h);
                 }
                 // Right wall
                 const difx : number = y - bottomRight;
                 if (difx > 0) {
 
                     const top : number = dy + 7;
-                    const bottom : number = dy + 16 + (difx - 1)*12;
+                    const bottom : number = bottomRight < 0 ? screenBottom : dy + 16 + (difx - 1)*12;
 
                     canvas.drawBitmap(bmp, Flip.None, dx + 12, top, 36, 0, 12, 8);
-                    canvas.drawBitmap(bmp, Flip.None, dx + 12, bottom, 36, 8, 12, 8);
+                    if (bottomRight >= 0) {
+                    
+                        canvas.drawBitmap(bmp, Flip.None, dx + 12, bottom, 36, 8, 12, 8);
+                    }
 
                     const h : number = Math.max(1, bottom - top - 8);
                     canvas.setDrawColor(...MASTER_PALETTE[2]);
@@ -86,8 +93,9 @@ export class Stage {
                 // Top right shade
                 if (y - topRight > 0) {
 
+                    const h : number = topRight < 0 ? screenBottom - dy : (y - topRight)*12;
                     canvas.setDrawColor(...MASTER_PALETTE[0]);
-                    canvas.fillRect(dx + 23, dy + 6, 1, (y - topRight)*12);
+                    canvas.fillRect(dx + 23, dy + 6, 1, h);
                 }
                 // Floor
                 canvas.drawBitmap(bmp, Flip.None, dx, dy, 0, 0, 24, 12);
@@ -106,8 +114,10 @@ export class Stage {
 
         const bmpBase : Bitmap = assets.getBitmap(BitmapIndex.Base)!;
 
-        canvas.moveTo(canvas.width/2, canvas.height/2 + this.height*8);
-        this.drawHeightmap(canvas, bmpBase);
+        const centery : number = canvas.height/2 + this.height*8;
+
+        canvas.moveTo(canvas.width/2, centery);
+        this.drawHeightmap(canvas, bmpBase, canvas.height - centery);
         canvas.moveTo();
     }
 }
