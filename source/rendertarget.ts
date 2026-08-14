@@ -80,7 +80,7 @@ export class RenderTarget {
     public fillRect(x : number, y : number, w : number, h : number) : void {
 
         x = (x + this.translation.x) | 0;
-        y = (y + this.translation.x) | 0;
+        y = (y + this.translation.y) | 0;
 
         this.ctx.fillRect(x, y, w | 0, h | 0);
     }
