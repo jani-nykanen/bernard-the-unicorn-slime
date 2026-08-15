@@ -20,6 +20,7 @@ export class Slime implements GameObject {
 
     private sprite : Sprite;
     private faceDir : Direction = Direction.Down;
+    private faceOffset : Vector = new Vector();
 
     private moving : boolean = false;
     private moveTimer : number = 0.0;
@@ -126,8 +127,10 @@ export class Slime implements GameObject {
     private updateMovement(prog : ProgramInterface) : void {
 
         const MOVE_SPEED : number = 1.0/12.0;
+        const INITIAL_GRAVITY : number = 0.1;
         const MAX_GRAVITY : number = 0.4;
         const GRAVITY_DELTA : number = 0.0075;
+        const JUMP_HEIGHT : number = 0.5;
 
         if (!this.moving) {
 
@@ -143,6 +146,7 @@ export class Slime implements GameObject {
                 this.falling = true;
                 this.renderPos.x = this.targetPos.x;
                 this.renderPos.z = this.targetPos.z;
+                this.gravity = INITIAL_GRAVITY;
                 return;
             }
 
@@ -150,6 +154,11 @@ export class Slime implements GameObject {
 
             this.renderPos.x = (1.0 - t)*this.basePos.x + t*this.targetPos.x;
             this.renderPos.z = (1.0 - t)*this.basePos.z + t*this.targetPos.z;
+
+            if (this.targetPos.y < this.basePos.y) {
+
+                this.renderPos.y = this.basePos.y + Math.sin(t*Math.PI)*JUMP_HEIGHT;
+            }
             
             return;
         }
@@ -171,17 +180,24 @@ export class Slime implements GameObject {
 
         const FRAME_TIME : number = 15;
 
-        this.sprite.animate(1, 0, 1, FRAME_TIME, prog.step);
+        this.faceOffset.x = this.sprite.flip == Flip.Horizontal ? 1 : 7;
+        this.faceOffset.y = this.sprite.column == 2 ? -3 : this.sprite.column - 1;
 
         this.sprite.flip = this.faceDir == Direction.Left || this.faceDir == Direction.Down ? Flip.Horizontal : Flip.None;
+        if (this.targetPos.y < this.basePos.y) {
+
+            this.sprite.setFrame(this.falling ? 0 : 2, 1);
+            return;
+        }
+        this.sprite.animate(1, 0, 1, FRAME_TIME, prog.step);
     }
 
 
     private drawFace(canvas : RenderTarget, bmp : Bitmap, dx : number, dy : number) : void {
 
-        const xoff : number = this.sprite.flip == Flip.Horizontal ? 1 : 7;
-
-        canvas.drawBitmap(bmp, this.sprite.flip, dx + xoff, dy - 1 + this.sprite.column, 0, 32, 8, 16);
+        canvas.drawBitmap(bmp, this.sprite.flip,
+             dx + this.faceOffset.x, 
+             dy + this.faceOffset.y, 0, 32, 8, 16);
     }
 
 
