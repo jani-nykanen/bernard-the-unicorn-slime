@@ -10,12 +10,13 @@ import { Vector } from "./vector.js";
 import { Wall } from "./wall.js";
 import { GameObject } from "./gameobject.js";
 import { Slime } from "./slime.js";
+import { Heightmap } from "./heightmap.js";
 
 
 export class Stage {
 
 
-    private heightMap : number[];
+    private heightMap : Heightmap;
 
     private walls : Wall[];
     private objects : GameObject[];
@@ -28,11 +29,11 @@ export class Stage {
 
     constructor(heightData : number[], objectData : number[], width : number, depth : number) {
 
-        this.heightMap = Array.from(heightData);
+        this.heightMap = new Heightmap(heightData, width, depth);
 
         this.width = width;
         this.depth = depth;
-        this.height = Math.max(...this.heightMap);
+        this.height = this.heightMap.maxHeight;
 
         this.depthBuffer = new DepthObjectBuffer();
         this.walls = new Array<Wall> (width*depth);
@@ -55,7 +56,7 @@ export class Stage {
 
                     continue;
                 }
-                out[(j + 1)*3 + (i + 1)] = this.heightMap[(z + j)*this.width + (x + i)]; 
+                out[(j + 1)*3 + (i + 1)] = this.heightMap.heightAt(x + i, z + j);
             }
         }
         return out;
@@ -68,7 +69,7 @@ export class Stage {
 
             for (let x : number = 0; x < this.width; ++ x) {
 
-                const y : number = this.heightMap[z*this.width + x];
+                const y : number = this.heightMap.heightAt(x, z);
                 const w : Wall = new Wall(x, y, z, this.computeNeighbors(x, z));
                 this.walls[z*this.width + x] = w;
                 this.depthBuffer.pushObject(w);
@@ -83,14 +84,14 @@ export class Stage {
 
             for (let x : number = 0; x < this.width; ++ x) {
 
-                const index : number = z*this.width + x;
-                const y : number = this.heightMap[index];
-                const objectID : number = objectData[index];
+                const y : number = this.heightMap.heightAt(x, z);
+                const objectID : number = objectData[z*this.width + x];
                 switch (objectID) {
 
                 // Slime
-                case 1: {
-                    const o : Slime = new Slime(x, y, z);
+                case 1: 
+                case 2: {
+                    const o : Slime = new Slime(x, y + 1, z, objectID == 2);
                     this.objects.push(o);
                     this.depthBuffer.pushObject(o);
                     break;
@@ -106,7 +107,10 @@ export class Stage {
 
     public update(prog : ProgramInterface) : void {
 
-        // ...
+        for (const o of this.objects) {
+
+            o.update(this.heightMap, prog);
+        }
     }
 
 

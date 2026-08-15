@@ -21,6 +21,10 @@ export class DepthObjectBuffer {
 
             if ((a.pos.z | 0) == (b.pos.z | 0)) {
 
+                if ((a.pos.y | 0) == (b.pos.y | 0)) {
+
+                    return a.pos.x - b.pos.x;
+                }
                 return a.pos.y - b.pos.y;
             }
             return a.pos.z - b.pos.z;

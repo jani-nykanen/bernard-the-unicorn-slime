@@ -78,12 +78,13 @@ export class Program implements ProgramInterface {
 
             if (this.initialized) {
 
-                this.activeScene?.init(null, this);
+                this.activeScene?.update(this);
             }
 
             if (loaded && !this.initialized) {
                 
                 this.onLoadEvent?.(this);
+                this.activeScene?.init(null, this);
                 this.initialized = true;
             }
                 
