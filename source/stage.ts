@@ -9,7 +9,6 @@ import { Flip, RenderTarget } from "./rendertarget.js";
 import { Vector } from "./vector.js";
 import { Wall } from "./wall.js";
 import { GameObject } from "./gameobject.js";
-import { Slime } from "./slime.js";
 import { Terrain } from "./terrain.js";
 
 
@@ -86,20 +85,14 @@ export class Stage {
 
                 const y : number = this.terrain.heightAt(x, z);
                 const objectID : number = objectData[z*this.width + x];
-                switch (objectID) {
+                if (objectID < 1) {
 
-                // Slime
-                case 1: 
-                case 2: {
-                    const o : Slime = new Slime(x, y + 1, z, objectID == 2);
-                    this.objects.push(o);
-                    this.depthBuffer.pushObject(o);
-                    break;
+                    continue;
                 }
-
-                default:
-                    break;
-                }
+                
+                const o : GameObject = new GameObject(x, y + 1, z, objectID);
+                this.objects.push(o);
+                this.depthBuffer.pushObject(o);
             }
         }
     }

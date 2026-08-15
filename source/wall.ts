@@ -42,7 +42,7 @@ export class Wall implements DepthObject {
         if (shadow !== null) {
 
             const shadowPos = isometricProjection(shadow);
-            canvas.drawBitmap(bmp, Flip.None, shadowPos.x*12 - 8, shadowPos.y*12 - 3, 48, 16, 16, 8);
+            canvas.drawBitmap(bmp, Flip.None, shadowPos.x*12 - 8, shadowPos.y*12 - 3, 8, 32, 16, 8);
         }
 
         // Left wall
