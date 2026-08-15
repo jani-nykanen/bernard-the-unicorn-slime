@@ -10,13 +10,13 @@ import { Vector } from "./vector.js";
 import { Wall } from "./wall.js";
 import { GameObject } from "./gameobject.js";
 import { Slime } from "./slime.js";
-import { Heightmap } from "./heightmap.js";
+import { Terrain } from "./terrain.js";
 
 
 export class Stage {
 
 
-    private heightMap : Heightmap;
+    private terrain : Terrain;
 
     private walls : Wall[];
     private objects : GameObject[];
@@ -29,11 +29,11 @@ export class Stage {
 
     constructor(heightData : number[], objectData : number[], width : number, depth : number) {
 
-        this.heightMap = new Heightmap(heightData, width, depth);
+        this.terrain = new Terrain(heightData, width, depth);
 
         this.width = width;
         this.depth = depth;
-        this.height = this.heightMap.maxHeight;
+        this.height = this.terrain.maxHeight;
 
         this.depthBuffer = new DepthObjectBuffer();
         this.walls = new Array<Wall> (width*depth);
@@ -56,7 +56,7 @@ export class Stage {
 
                     continue;
                 }
-                out[(j + 1)*3 + (i + 1)] = this.heightMap.heightAt(x + i, z + j);
+                out[(j + 1)*3 + (i + 1)] = this.terrain.heightAt(x + i, z + j);
             }
         }
         return out;
@@ -69,8 +69,8 @@ export class Stage {
 
             for (let x : number = 0; x < this.width; ++ x) {
 
-                const y : number = this.heightMap.heightAt(x, z);
-                const w : Wall = new Wall(x, y, z, this.computeNeighbors(x, z));
+                const y : number = this.terrain.heightAt(x, z);
+                const w : Wall = new Wall(x, y, z, this.computeNeighbors(x, z), this.terrain);
                 this.walls[z*this.width + x] = w;
                 this.depthBuffer.pushObject(w);
             }
@@ -84,7 +84,7 @@ export class Stage {
 
             for (let x : number = 0; x < this.width; ++ x) {
 
-                const y : number = this.heightMap.heightAt(x, z);
+                const y : number = this.terrain.heightAt(x, z);
                 const objectID : number = objectData[z*this.width + x];
                 switch (objectID) {
 
@@ -107,9 +107,10 @@ export class Stage {
 
     public update(prog : ProgramInterface) : void {
 
+        this.terrain.flushShadows();
         for (const o of this.objects) {
 
-            o.update(this.heightMap, prog);
+            o.update(this.terrain, prog);
         }
     }
 
@@ -126,7 +127,7 @@ export class Stage {
         this.depthBuffer.sort();
         this.depthBuffer.draw(canvas, bmpBase);
 
-        //this.drawHeightmap(canvas, bmpBase, canvas.height - centery);
+        //this.drawTerrain(canvas, bmpBase, canvas.height - centery);
         canvas.moveTo();
     }
 }

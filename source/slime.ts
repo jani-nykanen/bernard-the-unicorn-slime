@@ -5,7 +5,7 @@ import { ProgramInterface } from "./program.js";
 import { Flip, RenderTarget } from "./rendertarget.js";
 import { Vector } from "./vector.js";
 import { Sprite } from "./sprite.js";
-import { Heightmap } from "./heightmap.js";
+import { Terrain } from "./terrain.js";
 import { InputFlag, InputState } from "./keyboard.js";
 import { ActionIndex } from "./keyconfig.js";
 import { Direction } from "./direction.js";
@@ -56,7 +56,7 @@ export class Slime implements GameObject {
     }
 
 
-    private initiateMovement(heightMap : Heightmap, prog : ProgramInterface) : void {
+    private initiateMovement(terrain : Terrain, prog : ProgramInterface) : void {
 
         const right : InputState = prog.keyboard.getActionState(ActionIndex.Right);
         const up : InputState = prog.keyboard.getActionState(ActionIndex.Up);
@@ -93,7 +93,7 @@ export class Slime implements GameObject {
 
             const dx : number = (this.basePos.x | 0) + dirx;
             const dz : number = (this.basePos.z | 0) + dirz;
-            const dy : number = heightMap.heightAt(dx, dz) + 1;
+            const dy : number = terrain.heightAt(dx, dz) + 1;
 
             if (dy <= 0 || dy > (this.basePos.y | 0)) {
 
@@ -114,13 +114,13 @@ export class Slime implements GameObject {
     }
 
 
-    private control(heightMap : Heightmap, prog : ProgramInterface) : void {
+    private control(terrain : Terrain, prog : ProgramInterface) : void {
 
         if (this.moving) {
 
             return;
         }
-        this.initiateMovement(heightMap, prog);
+        this.initiateMovement(terrain, prog);
     }
 
 
@@ -180,9 +180,6 @@ export class Slime implements GameObject {
 
         const FRAME_TIME : number = 15;
 
-        this.faceOffset.x = this.sprite.flip == Flip.Horizontal ? 1 : 7;
-        this.faceOffset.y = this.sprite.column == 2 ? -3 : this.sprite.column - 1;
-
         this.sprite.flip = this.faceDir == Direction.Left || this.faceDir == Direction.Down ? Flip.Horizontal : Flip.None;
         if (this.targetPos.y < this.basePos.y) {
 
@@ -190,6 +187,13 @@ export class Slime implements GameObject {
             return;
         }
         this.sprite.animate(1, 0, 1, FRAME_TIME, prog.step);
+    }
+
+
+    private computeFaceProperties() : void {
+
+        this.faceOffset.x = this.sprite.flip == Flip.Horizontal ? 1 : 7;
+        this.faceOffset.y = this.sprite.column == 2 ? -3 : this.sprite.column - 1;
     }
 
 
@@ -201,7 +205,23 @@ export class Slime implements GameObject {
     }
 
 
-    public update(heightMap : Heightmap, prog : ProgramInterface) : void {
+    private markShadows(terrain : Terrain) : void {
+
+        if (!this.moving) {
+
+            return;
+        }
+            
+        if (this.moveTimer < 0.5) {
+            
+            terrain.markShadow(this.basePos.x, this.basePos.z, this.renderPos);
+            return;
+        }
+        terrain.markShadow(this.targetPos.x, this.targetPos.z, this.renderPos);
+    }
+
+
+    public update(terrain : Terrain, prog : ProgramInterface) : void {
         
         if (!this.active) {
 
@@ -209,9 +229,11 @@ export class Slime implements GameObject {
             return;
         }
 
-        this.control(heightMap, prog);
+        this.control(terrain, prog);
         this.updateMovement(prog);
         this.animate(prog);
+        this.computeFaceProperties();
+        this.markShadows(terrain);
     }
 
 
@@ -220,7 +242,7 @@ export class Slime implements GameObject {
         const v : Vector = isometricProjection(this.renderPos);
         
         const dx : number = v.x*12 - 8;
-        const dy : number = v.y*12;
+        const dy : number = v.y*12 - 1;
 
         const faceFront : boolean = this.faceDir == Direction.Right || this.faceDir == Direction.Down;
 

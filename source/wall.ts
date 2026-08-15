@@ -3,6 +3,7 @@ import { DepthObject } from "./depthobject.js";
 import { isometricProjection } from "./math.js";
 import { MASTER_PALETTE } from "./palette.js";
 import { Flip, RenderTarget } from "./rendertarget.js";
+import { Terrain } from "./terrain.js";
 import { Vector } from "./vector.js";
 
 
@@ -12,13 +13,19 @@ export class Wall implements DepthObject {
 
     private neighborhood : number[];
 
+    // A reference to terrain since "draw" cannot take
+    // additional arguments.
+    private readonly terrain : Terrain;
+
     public readonly pos : Vector = new Vector();
 
 
-    constructor(x : number, y : number, z : number, neighborhood : number[]) {
+    constructor(x : number, y : number, z : number, neighborhood : number[], terrain : Terrain) {
 
         this.neighborhood = Array.from(neighborhood);
         this.pos.setValues(x, y, z);
+
+        this.terrain = terrain;
     }
 
 
@@ -28,6 +35,15 @@ export class Wall implements DepthObject {
 
         const dx : number = v.x*12 - 12;
         const dy : number = v.y*12 - 6;
+
+        // Floor
+        canvas.drawBitmap(bmp, Flip.None, dx, dy, 0, 0, 24, 12);
+        const shadow : Vector | null = this.terrain.shadowAt(this.pos.x, this.pos.z);
+        if (shadow !== null) {
+
+            const shadowPos = isometricProjection(shadow);
+            canvas.drawBitmap(bmp, Flip.None, shadowPos.x*12 - 8, shadowPos.y*12 - 3, 48, 16, 16, 8);
+        }
 
         // Left wall
         const bottomLeft : number = this.neighborhood[7];
@@ -96,8 +112,5 @@ export class Wall implements DepthObject {
                 }
             }
         }
-
-        // Floor
-        canvas.drawBitmap(bmp, Flip.None, dx, dy, 0, 0, 24, 12);
     }
 }
