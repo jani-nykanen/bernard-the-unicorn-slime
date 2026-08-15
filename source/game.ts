@@ -8,13 +8,21 @@ import { Scene, SceneChangeParameter } from "./scene.js";
 import { Stage } from "./stage.js";
 
 
-const TEST_MAP : number[] = [
+const TEST_HEIGHT_MAP : number[] = [
 
-    4, 4, 3, 2,
-    3, 3, 2, 1,
+    3, 4, 3, 2,
+    2, 3, 2, 1,
     1, 1, 0, 1,
-    1, 1, 0, 0,
-]
+    1, 0, 0, 0,
+];
+
+const TEST_OBJECT_MAP : number[] = [
+
+    0, 1, 0, 0,
+    1, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0, 0,
+];
 
 
 export class Game implements Scene {
@@ -31,7 +39,7 @@ export class Game implements Scene {
 
     public init(param : SceneChangeParameter, prog : ProgramInterface) : void {
         
-        this.stage = new Stage(TEST_MAP, 4, 4);
+        this.stage = new Stage(TEST_HEIGHT_MAP, TEST_OBJECT_MAP, 4, 4);
     }
 
 

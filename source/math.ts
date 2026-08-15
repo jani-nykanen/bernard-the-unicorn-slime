@@ -1,10 +1,7 @@
 import { Vector } from "./vector.js";
 
 
+export const isometricProjection = (v : Vector) : Vector => {
 
-export const isometricProjection = (
-    x : number, y : number, z : number, 
-    out : Vector) : void => {
-
-    out.setValues(x - z, 0.5*(x + z) - y);
+    return new Vector(v.x - v.z, 0.5*(v.x + v.z) - v.y);
 } 

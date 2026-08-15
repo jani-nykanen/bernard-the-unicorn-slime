@@ -4,10 +4,12 @@ import { BitmapIndex } from "./assetindex.js"
 import { MASTER_PALETTE } from "./palette.js";
 
 
-const alphaMask : number[] = 
+const ALPHA_MASK : number[] = 
 [
     2, 2, 2, 4, 4, 4, 0, 0,    
-    2, 2, 2, 4, 4, 4, 0, 0,       
+    2, 2, 2, 4, 4, 4, 0, 0,      
+    4, 2, 0, 0, 0, 0, 0, 0,
+    4, 2, 0, 0, 0, 0, 0, 0, 
 ];
 
 
@@ -22,6 +24,8 @@ window.onload = () : void => (new Program(160, 144, 60,
     // onLoad
     (prog : ProgramInterface) : void => {
 
-        prog.assets.applyPalette(BitmapIndex.BaseRaw, BitmapIndex.Base, MASTER_PALETTE, alphaMask);
+        prog.assets.applyPalette(
+            BitmapIndex.BaseRaw, BitmapIndex.Base, 
+            MASTER_PALETTE, ALPHA_MASK);
 
     })).run();
