@@ -8,13 +8,13 @@ import { Terrain } from "./terrain.js";
 import { InputFlag, InputState } from "./keyboard.js";
 import { ActionIndex } from "./keyconfig.js";
 import { Direction } from "./direction.js";
+import { GameObjectType } from "./objecttype.js";
 
 
 export class GameObject {
 
 
     private shadowRef : Vector | null = null;
-
 
     protected basePos : Vector;
     protected targetPos : Vector;
@@ -29,6 +29,11 @@ export class GameObject {
     protected falling : boolean = false;
     protected jumping : boolean = false;
 
+    protected active : boolean = true;
+
+
+    public readonly type : GameObjectType;
+
 
     public get pos() : Vector {
 
@@ -40,13 +45,15 @@ export class GameObject {
     }
 
 
-    constructor(x : number, y : number, z : number) {
+    constructor(x : number, y : number, z : number, type : GameObjectType) {
 
         this.basePos = new Vector(x, y, z);
         this.renderPos = this.basePos.clone();
         this.targetPos = this.basePos.clone();
 
         this.sprite = new Sprite(16, 16);
+
+        this.type = type;
     }
 
 
@@ -136,7 +143,8 @@ export class GameObject {
         const x : number = this.basePos.x | 0;
         const y : number = this.basePos.y | 0;
         const z : number = this.basePos.z | 0;
-        if (this.moving || terrain.heightAt(x, z) + 1 != y) {
+        if (this.moving || terrain.heightAt(x, z) + 1 != y ||
+            terrain.objectAt(x, y + 1, z) !== null) {
 
             return;
         }
@@ -230,4 +238,18 @@ export class GameObject {
         this.drawShadow(canvas, bmp);
     }
 
+
+    public isActive() : boolean {
+
+        return this.active;
+    }
+
+
+    public isMoving() : boolean {
+
+        return this.moving;
+    }
+
+
+    public toggleActivation?(state : boolean) : void;
 }

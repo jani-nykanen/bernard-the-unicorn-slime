@@ -11,6 +11,9 @@ import { Wall } from "./wall.js";
 import { GameObject } from "./gameobject.js";
 import { Terrain } from "./terrain.js";
 import { Slime } from "./slime.js";
+import { ActionIndex } from "./keyconfig.js";
+import { InputFlag } from "./keyboard.js";
+import { GameObjectType } from "./objecttype.js";
 
 
 export class Stage {
@@ -122,12 +125,41 @@ export class Stage {
     }
 
 
+    private changeActiveSlime() : void {
+
+        let i : number = this.activeSlimeIndex;
+        do {
+
+            i = (i + 1) % this.objects.length;
+
+            const o : GameObject = this.objects[i];
+            if (o.type == GameObjectType.Slime) {
+
+                this.objects[this.activeSlimeIndex].toggleActivation?.(false);
+                o.toggleActivation?.(true);
+                this.activeSlimeIndex = i;
+                return;
+            }
+        }
+        while (i != this.activeSlimeIndex);
+    }
+
+
     public update(prog : ProgramInterface) : void {
 
         this.terrain.flush();
+
+        let anythingMoving : boolean = false;
         for (const o of this.objects) {
 
             o.update(this.terrain, prog);
+            anythingMoving ||= o.isMoving();
+        }
+
+        if (!anythingMoving && 
+            prog.keyboard.getActionState(ActionIndex.ChangeActive).flag == InputFlag.Pressed) {
+
+            this.changeActiveSlime();
         }
     }
 

@@ -8,20 +8,21 @@ import { Terrain } from "./terrain.js";
 import { InputFlag, InputState } from "./keyboard.js";
 import { ActionIndex } from "./keyconfig.js";
 import { Direction } from "./direction.js";
+import { GameObjectType } from "./objecttype.js";
 
 
 
 export class Slime extends GameObject {
 
 
-    private faceOffset : Vector = new Vector();
+    private changeAnimationFinished : boolean = true;
 
-    private active : boolean;
+    private faceOffset : Vector = new Vector();
 
 
     constructor(x : number, y : number, z : number, active : boolean) {
 
-        super(x, y, z);
+        super(x, y, z, GameObjectType.Slime);
 
         this.active = active;
         this.sprite.setFrame(Number(!active)*3, 1);
@@ -80,11 +81,19 @@ export class Slime extends GameObject {
     }
 
 
+    private determineFlip() : void {
+
+        this.sprite.flip = 
+            this.faceDir == Direction.Left || this.faceDir == Direction.Down ? 
+                Flip.Horizontal : Flip.None;
+    }
+
+
     private animate(prog : ProgramInterface) : void {
 
         const FRAME_TIME : number = 15;
 
-        this.sprite.flip = this.faceDir == Direction.Left || this.faceDir == Direction.Down ? Flip.Horizontal : Flip.None;
+        this.determineFlip();
         if (this.targetPos.y < this.basePos.y) {
 
             this.sprite.setFrame(this.falling ? 0 : 2, 1);
@@ -94,7 +103,35 @@ export class Slime extends GameObject {
     }
 
 
+    private animateStateChanging(prog : ProgramInterface) : void {
+
+        const FRAME_TIME : number = 6.0;
+
+        this.determineFlip();
+        if (!this.active) {
+
+            this.sprite.animate(1, 0, 3, FRAME_TIME, prog.step, false);
+            if (this.sprite.column == 3) {
+
+                this.changeAnimationFinished = true;
+            }
+            return;
+        }
+
+        this.sprite.animate(1, 3, 0, FRAME_TIME, prog.step, false);
+        if (this.sprite.column == 0) {
+
+            this.changeAnimationFinished = true;
+        }
+    }
+
+
     private drawFace(canvas : RenderTarget, bmp : Bitmap, dx : number, dy : number) : void {
+
+        if (!this.changeAnimationFinished) {
+
+            return;
+        }
 
         canvas.drawBitmap(bmp, this.sprite.flip,
              dx + this.faceOffset.x, 
@@ -104,9 +141,16 @@ export class Slime extends GameObject {
 
     protected updateLogic(terrain : Terrain, prog : ProgramInterface) : void {
 
+        if (!this.changeAnimationFinished) {
+
+            this.animateStateChanging(prog);
+            return;
+        }
+
         if (!this.active) {
 
             this.sprite.setFrame(3, 1);
+            this.sprite.flip = Flip.None;
             return;
         }
 
@@ -131,4 +175,13 @@ export class Slime extends GameObject {
         }
     }
 
+
+    public toggleActivation(state : boolean) : void {
+        
+        this.active = state;
+        this.changeAnimationFinished = false;
+
+        this.sprite.setFrame(state ? 3 : 0, 1);
+        // TODO: Start some animation etc.
+    }
 }

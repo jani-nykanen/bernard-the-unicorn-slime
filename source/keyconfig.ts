@@ -31,5 +31,5 @@ export const initKeyConfig = (keyb : Keyboard) : void => {
 
     keyb.addAction(ActionIndex.Undo, ["KeyZ", "Backspace"]);
     keyb.addAction(ActionIndex.Reset, ["KeyR"]);
-    keyb.addAction(ActionIndex.ChangeActive, ["Space" ]);
+    keyb.addAction(ActionIndex.ChangeActive, ["Space"]);
 }
