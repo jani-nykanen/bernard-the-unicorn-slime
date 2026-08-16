@@ -10,6 +10,7 @@ import { Vector } from "./vector.js";
 import { Wall } from "./wall.js";
 import { GameObject } from "./gameobject.js";
 import { Terrain } from "./terrain.js";
+import { Slime } from "./slime.js";
 
 
 export class Stage {
@@ -83,14 +84,30 @@ export class Stage {
 
             for (let x : number = 0; x < this.width; ++ x) {
 
-                const y : number = this.terrain.heightAt(x, z);
+                const y : number = this.terrain.heightAt(x, z) + 1;
                 const objectID : number = objectData[z*this.width + x];
                 if (objectID < 1) {
 
                     continue;
                 }
                 
-                const o : GameObject = new GameObject(x, y + 1, z, objectID);
+                let o : GameObject | null = null;
+                switch (objectID) {
+
+                // Slime
+                case 1:
+                case 2:
+                    o = new Slime(x, y, z, objectID == 1);
+                    break;
+
+                default:
+                    break;
+                }
+
+                if (o === null) {
+
+                    continue;
+                }
                 this.objects.push(o);
                 this.depthBuffer.pushObject(o);
             }
@@ -100,7 +117,7 @@ export class Stage {
 
     public update(prog : ProgramInterface) : void {
 
-        this.terrain.flushShadows();
+        this.terrain.flush();
         for (const o of this.objects) {
 
             o.update(this.terrain, prog);

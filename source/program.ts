@@ -56,6 +56,9 @@ export class Program implements ProgramInterface {
         this.onLoadEvent = onLoad;
 
         this._step = 60/framerate;
+
+        window.addEventListener("mousemove", () : void => window.focus());
+        window.addEventListener("mousedown", () : void => window.focus());
     }
 
 
