@@ -3,5 +3,11 @@ import { Vector } from "./vector.js";
 
 export const isometricProjection = (v : Vector) : Vector => {
 
-    return new Vector(v.x - v.z, 0.5*(v.x + v.z) - v.y);
+    return isometricProjectionFromComponents(v.x, v.y, v.z);
+} 
+
+
+export const isometricProjectionFromComponents = (x : number, y : number, z : number) : Vector => {
+
+    return new Vector(x - z, 0.5*(x + z) - y);
 } 

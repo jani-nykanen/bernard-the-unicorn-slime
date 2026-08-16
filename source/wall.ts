@@ -38,11 +38,15 @@ export class Wall implements DepthObject {
 
         // Floor
         canvas.drawBitmap(bmp, Flip.None, dx, dy, 0, 0, 24, 12);
-        const shadow : Vector | null = this.terrain.shadowAt(this.pos.x, this.pos.z);
-        if (shadow !== null) {
+        // Shadow, if no object is standing on the wall
+        if (this.terrain.objectAt(this.pos.x | 0, (this.pos.y | 0) + 1, this.pos.z | 0 ) === null) {
 
-            const shadowPos = isometricProjection(shadow);
-            canvas.drawBitmap(bmp, Flip.None, shadowPos.x*12 - 8, shadowPos.y*12 - 3, 8, 32, 16, 8);
+            const shadow : Vector | null = this.terrain.shadowAt(this.pos.x, this.pos.z);
+            if (shadow !== null) {
+
+                const shadowPos = isometricProjection(shadow);
+                canvas.drawBitmap(bmp, Flip.None, shadowPos.x*12 - 8, shadowPos.y*12 - 3, 8, 32, 16, 8);
+            }
         }
 
         // Left wall

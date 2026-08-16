@@ -14,6 +14,7 @@ export const enum ActionIndex {
     
     Undo = 7,
     Reset = 8,
+    ChangeActive = 9
 };
 
 
@@ -30,4 +31,5 @@ export const initKeyConfig = (keyb : Keyboard) : void => {
 
     keyb.addAction(ActionIndex.Undo, ["KeyZ", "Backspace"]);
     keyb.addAction(ActionIndex.Reset, ["KeyR"]);
+    keyb.addAction(ActionIndex.ChangeActive, ["Space" ]);
 }

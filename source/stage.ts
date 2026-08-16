@@ -20,6 +20,7 @@ export class Stage {
 
     private walls : Wall[];
     private objects : GameObject[];
+    private activeSlimeIndex : number = -1;
     private depthBuffer : DepthObjectBuffer;
 
     public readonly width : number;
@@ -111,6 +112,11 @@ export class Stage {
                 this.objects.push(o);
                 this.depthBuffer.pushObject(o);
                 this.terrain.markObject(x, y, z, o);
+
+                if (objectID == 1) {
+
+                    this.activeSlimeIndex = this.objects.length - 1;
+                }
             }
         }
     }

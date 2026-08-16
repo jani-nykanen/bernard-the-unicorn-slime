@@ -1,5 +1,5 @@
 import { Bitmap } from "./bitmap.js";
-import { isometricProjection } from "./math.js";
+import { isometricProjection, isometricProjectionFromComponents } from "./math.js";
 import { ProgramInterface } from "./program.js";
 import { Flip, RenderTarget } from "./rendertarget.js";
 import { Vector } from "./vector.js";
@@ -11,6 +11,9 @@ import { Direction } from "./direction.js";
 
 
 export class GameObject {
+
+
+    private shadowRef : Vector | null = null;
 
 
     protected basePos : Vector;
@@ -47,17 +50,19 @@ export class GameObject {
     }
 
 
-    private terminateMovement() : void {
+    private terminateMovement(terrain : Terrain) : void {
 
         this.renderPos.y = this.targetPos.y;
         this.moving = false;
         this.falling = false;
 
         this.basePos.makeEqual(this.targetPos);
+
+        terrain.markObject(this.basePos.x | 0, this.basePos.y | 0, this.basePos.z | 0, this);
     }
 
 
-    private updateMovement(prog : ProgramInterface) : void {
+    private updateMovement(terrain : Terrain, prog : ProgramInterface) : void {
 
         const MOVE_SPEED : number = 1.0/12.0;
         const INITIAL_GRAVITY : number = 0.1;
@@ -83,7 +88,7 @@ export class GameObject {
 
                 if ((this.targetPos.y | 0) == (this.basePos.y | 0)) {
 
-                    this.terminateMovement();
+                    this.terminateMovement(terrain);
                 }
                 return;
             }
@@ -105,7 +110,7 @@ export class GameObject {
         this.renderPos.y -= this.gravity*prog.step;
         if (this.renderPos.y <= this.targetPos.y) {
 
-            this.terminateMovement();
+            this.terminateMovement(terrain);
         }
     }
 
@@ -123,6 +128,34 @@ export class GameObject {
             return;
         }
         terrain.markShadow(this.targetPos.x, this.targetPos.z, this.renderPos);
+    }
+
+
+    private checkOverlayingShadow(terrain : Terrain) : void {
+
+        const x : number = this.basePos.x | 0;
+        const y : number = this.basePos.y | 0;
+        const z : number = this.basePos.z | 0;
+        if (this.moving || terrain.heightAt(x, z) + 1 != y) {
+
+            return;
+        }
+        this.shadowRef = terrain.shadowAt(x, z);
+    }
+
+
+    private drawShadow(canvas : RenderTarget, bmp : Bitmap) : void {
+
+        if (this.shadowRef === null) {
+
+            return;
+        }
+
+        const v : Vector = isometricProjectionFromComponents(this.shadowRef.x, this.shadowRef.y + 1, this.shadowRef.z);
+        const dx : number = v.x*12 - 8;
+        const dy : number = v.y*12 - 3;
+
+        canvas.drawBitmap(bmp, Flip.None, dx, dy, 8, 32, 16, 8);
     }
 
 
@@ -165,7 +198,7 @@ export class GameObject {
         this.falling = false;
 
         terrain.markObject(x, y, z, null);
-        terrain.markObject(dx, dy, dz, this);
+        // terrain.markObject(dx, dy, dz, this);
 
         return true;
     }
@@ -174,8 +207,9 @@ export class GameObject {
     public update(terrain : Terrain, prog : ProgramInterface) : void {
                 
         this.updateLogic?.(terrain, prog);
-        this.updateMovement(prog);
+        this.updateMovement(terrain, prog);
         this.markShadows(terrain);
+        this.checkOverlayingShadow(terrain);
     }
 
 
@@ -188,9 +222,12 @@ export class GameObject {
         if (this.customDraw !== undefined) {
 
             this.customDraw(canvas, bmp, dx, dy);
-            return;
         }
-        this.sprite.draw(canvas, bmp, dx, dy);
+        else {
+            
+            this.sprite.draw(canvas, bmp, dx, dy);
+        }
+        this.drawShadow(canvas, bmp);
     }
 
 }
