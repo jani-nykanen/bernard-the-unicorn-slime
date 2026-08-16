@@ -26,13 +26,13 @@ export class Terrain {
 
         this.shadowActive = (new Array<boolean> (width*depth)).fill(false);
         this.shadowPositions = (new Array<Vector> (width*depth)).fill(dummy).map(() => new Vector());
-        this.objectPositions = (new Array<GameObject | null> (width*depth*(this.maxHeight + 1))).fill(null);
+        this.objectPositions = (new Array<GameObject | null> (width*depth*(this.maxHeight + 2))).fill(null);
     }
 
 
     private outOfBounds(x : number, y : number, z : number) : boolean {
 
-        return x < 0 || y < 0 || z < 0 || x >= this.width || y >= this.maxHeight + 1 || z >= this.depth;
+        return x < 0 || y < 0 || z < 0 || x >= this.width || y >= this.maxHeight + 2 || z >= this.depth;
     }
 
 
@@ -51,11 +51,7 @@ export class Terrain {
     }
 
 
-    public markObject(o : GameObject) : void {
-
-        const x : number = o.pos.x | 0;
-        const y : number = o.pos.y | 0;
-        const z : number = o.pos.z | 0;
+    public markObject(x : number, y : number, z : number, o : GameObject | null) : void {
 
         if (this.outOfBounds(x, y, z)) {
 
@@ -91,7 +87,6 @@ export class Terrain {
 
             return null;
         }
-        console.log(y);
 
         const area : number = this.width*this.depth;
         const offset : number = z*this.width + x;
@@ -126,9 +121,11 @@ export class Terrain {
             this.shadowActive[k] = false;
         }
 
+        /*
         for (const k in this.objectPositions) {
 
             this.objectPositions[k] = null;
         }
+        */
     }
 }

@@ -110,6 +110,7 @@ export class Stage {
                 }
                 this.objects.push(o);
                 this.depthBuffer.pushObject(o);
+                this.terrain.markObject(x, y, z, o);
             }
         }
     }

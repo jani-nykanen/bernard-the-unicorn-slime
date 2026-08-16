@@ -24,6 +24,7 @@ export class GameObject {
     protected moveTimer : number = 0.0;
     protected gravity : number = 0.0;
     protected falling : boolean = false;
+    protected jumping : boolean = false;
 
 
     public get pos() : Vector {
@@ -43,6 +44,16 @@ export class GameObject {
         this.targetPos = this.basePos.clone();
 
         this.sprite = new Sprite(16, 16);
+    }
+
+
+    private terminateMovement() : void {
+
+        this.renderPos.y = this.targetPos.y;
+        this.moving = false;
+        this.falling = false;
+
+        this.basePos.makeEqual(this.targetPos);
     }
 
 
@@ -69,6 +80,11 @@ export class GameObject {
                 this.renderPos.x = this.targetPos.x;
                 this.renderPos.z = this.targetPos.z;
                 this.gravity = INITIAL_GRAVITY;
+
+                if ((this.targetPos.y | 0) == (this.basePos.y | 0)) {
+
+                    this.terminateMovement();
+                }
                 return;
             }
 
@@ -89,11 +105,7 @@ export class GameObject {
         this.renderPos.y -= this.gravity*prog.step;
         if (this.renderPos.y <= this.targetPos.y) {
 
-            this.renderPos.y = this.targetPos.y;
-            this.moving = false;
-            this.falling = false;
-
-            this.basePos.makeEqual(this.targetPos);
+            this.terminateMovement();
         }
     }
 
@@ -120,10 +132,13 @@ export class GameObject {
 
     protected move(terrain : Terrain, dirx : number, dirz : number) : boolean {
 
-        const dx : number = (this.basePos.x | 0) + dirx;
-        const dz : number = (this.basePos.z | 0) + dirz;
-
+        const x : number = (this.basePos.x) | 0;
         const y : number = (this.basePos.y) | 0;
+        const z : number = (this.basePos.z) | 0;
+
+        const dx : number = x + dirx;
+        const dz : number = z + dirz;
+
         let height : number = terrain.heightAt(dx, dz) + 1;
         if (height <= 0 || height > (this.basePos.y | 0) ||
             terrain.objectAt(dx, y, dz) !== null) {
@@ -135,7 +150,6 @@ export class GameObject {
         const objectBelow : GameObject | null = terrain.checkObjectBelow(dx, y, dz);
         if (objectBelow !== null) {
 
-            console.log(objectBelow);
             dy = objectBelow.pos.y + 1;
         }
 
@@ -150,17 +164,15 @@ export class GameObject {
 
         this.falling = false;
 
+        terrain.markObject(x, y, z, null);
+        terrain.markObject(dx, dy, dz, this);
+
         return true;
     }
 
 
     public update(terrain : Terrain, prog : ProgramInterface) : void {
-        
-        if (!this.moving) {
-
-            terrain.markObject(this);
-        }
-        
+                
         this.updateLogic?.(terrain, prog);
         this.updateMovement(prog);
         this.markShadows(terrain);
