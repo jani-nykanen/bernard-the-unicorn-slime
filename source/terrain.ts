@@ -1,4 +1,4 @@
-import { GameObject } from "./gameobject.js";
+import { MovingObject } from "./movingobject.js";
 import { Vector } from "./vector.js";
 
 
@@ -8,7 +8,7 @@ export class Terrain {
     private heightData : number[];
     private shadowActive : boolean[];
     private shadowPositions : Vector[];
-    private objectPositions : (GameObject | null) [];
+    private objectPositions : (MovingObject | null) [];
 
     public readonly width : number;
     public readonly depth : number;
@@ -26,7 +26,7 @@ export class Terrain {
 
         this.shadowActive = (new Array<boolean> (width*depth)).fill(false);
         this.shadowPositions = (new Array<Vector> (width*depth)).fill(dummy).map(() => new Vector());
-        this.objectPositions = (new Array<GameObject | null> (width*depth*(this.maxHeight + 2))).fill(null);
+        this.objectPositions = (new Array<MovingObject | null> (width*depth*(this.maxHeight + 2))).fill(null);
     }
 
 
@@ -51,7 +51,7 @@ export class Terrain {
     }
 
 
-    public markObject(x : number, y : number, z : number, o : GameObject | null) : void {
+    public markObject(x : number, y : number, z : number, o : MovingObject | null) : void {
 
         if (this.outOfBounds(x, y, z)) {
 
@@ -71,7 +71,7 @@ export class Terrain {
     }
 
 
-    public objectAt(x : number, y : number, z : number) : GameObject | null {
+    public objectAt(x : number, y : number, z : number) : MovingObject | null {
 
         if (this.outOfBounds(x, y, z)) {
 
@@ -81,7 +81,7 @@ export class Terrain {
     }
 
 
-    public checkObjectBelow(x : number, y : number, z : number) : GameObject | null {
+    public checkObjectBelow(x : number, y : number, z : number) : MovingObject | null {
 
         if (this.outOfBounds(x, y, z)) {
 
@@ -93,7 +93,7 @@ export class Terrain {
         const height : number = this.heightAt(x, z);
         for (let dy : number = y - 1; dy > height; -- dy) {
 
-            const o : GameObject | null = this.objectPositions[dy*area + offset] ?? null;
+            const o : MovingObject | null = this.objectPositions[dy*area + offset] ?? null;
             if (o !== null) {
 
                 return o;

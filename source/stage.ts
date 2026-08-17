@@ -8,12 +8,10 @@ import { ProgramInterface } from "./program.js";
 import { Flip, RenderTarget } from "./rendertarget.js";
 import { Vector } from "./vector.js";
 import { Wall } from "./wall.js";
-import { GameObject } from "./gameobject.js";
+import { MovingObject, MovingObjectType } from "./movingobject.js";
 import { Terrain } from "./terrain.js";
-import { Slime } from "./slime.js";
 import { ActionIndex } from "./keyconfig.js";
 import { InputFlag } from "./keyboard.js";
-import { GameObjectType } from "./objecttype.js";
 
 
 export class Stage {
@@ -22,7 +20,7 @@ export class Stage {
     private terrain : Terrain;
 
     private walls : Wall[];
-    private objects : GameObject[];
+    private objects : MovingObject[];
     private activeSlimeIndex : number = -1;
     private depthBuffer : DepthObjectBuffer;
 
@@ -41,7 +39,7 @@ export class Stage {
 
         this.depthBuffer = new DepthObjectBuffer();
         this.walls = new Array<Wall> (width*depth);
-        this.objects = new Array<GameObject> ();
+        this.objects = new Array<MovingObject> ();
         this.constructWalls();
         this.createObjects(objectData);
     }
@@ -84,6 +82,9 @@ export class Stage {
 
     private createObjects(objectData : number[]) : void {
 
+        const MOVING_OBJECT_FIRST : number = 1;
+        const MOVING_OBJECT_LAST : number = 8;
+
         for (let z : number = 0; z < this.depth; ++ z) {
 
             for (let x : number = 0; x < this.width; ++ x) {
@@ -94,31 +95,20 @@ export class Stage {
 
                     continue;
                 }
+
+                // Moving objects
+                if (objectID >= MOVING_OBJECT_FIRST && objectID <= MOVING_OBJECT_LAST) {
                 
-                let o : GameObject | null = null;
-                switch (objectID) {
+                    const o : MovingObject = new MovingObject(x, y, z, objectID);
 
-                // Slime
-                case 1:
-                case 2:
-                    o = new Slime(x, y, z, objectID == 1);
-                    break;
+                    this.objects.push(o);
+                    this.depthBuffer.pushObject(o);
+                    this.terrain.markObject(x, y, z, o);
 
-                default:
-                    break;
-                }
+                    if (objectID == 1) {
 
-                if (o === null) {
-
-                    continue;
-                }
-                this.objects.push(o);
-                this.depthBuffer.pushObject(o);
-                this.terrain.markObject(x, y, z, o);
-
-                if (objectID == 1) {
-
-                    this.activeSlimeIndex = this.objects.length - 1;
+                        this.activeSlimeIndex = this.objects.length - 1;
+                    }
                 }
             }
         }
@@ -132,11 +122,11 @@ export class Stage {
 
             i = (i + 1) % this.objects.length;
 
-            const o : GameObject = this.objects[i];
-            if (o.type == GameObjectType.Slime) {
+            const o : MovingObject = this.objects[i];
+            if (o.type == MovingObjectType.DeactivedSlime) {
 
-                this.objects[this.activeSlimeIndex].toggleActivation?.(false);
-                o.toggleActivation?.(true);
+                this.objects[this.activeSlimeIndex].changeType(MovingObjectType.DeactivedSlime);
+                o.changeType(MovingObjectType.Slime);
                 this.activeSlimeIndex = i;
                 return;
             }
