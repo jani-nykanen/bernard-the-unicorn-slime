@@ -8,7 +8,7 @@ import { ProgramInterface } from "./program.js";
 import { Flip, RenderTarget } from "./rendertarget.js";
 import { Vector } from "./vector.js";
 import { Wall } from "./wall.js";
-import { MovingObject, MovingObjectType } from "./movingobject.js";
+import { GameObject, GameObjectType } from "./gameobject.js";
 import { Terrain } from "./terrain.js";
 import { ActionIndex } from "./keyconfig.js";
 import { InputFlag } from "./keyboard.js";
@@ -20,7 +20,7 @@ export class Stage {
     private terrain : Terrain;
 
     private walls : Wall[];
-    private objects : MovingObject[];
+    private objects : GameObject[];
     private activeSlimeIndex : number = -1;
     private depthBuffer : DepthObjectBuffer;
 
@@ -39,7 +39,7 @@ export class Stage {
 
         this.depthBuffer = new DepthObjectBuffer();
         this.walls = new Array<Wall> (width*depth);
-        this.objects = new Array<MovingObject> ();
+        this.objects = new Array<GameObject> ();
         this.constructWalls();
         this.createObjects(objectData);
     }
@@ -99,7 +99,7 @@ export class Stage {
                 // Moving objects
                 if (objectID >= MOVING_OBJECT_FIRST && objectID <= MOVING_OBJECT_LAST) {
                 
-                    const o : MovingObject = new MovingObject(x, y, z, objectID);
+                    const o : GameObject = new GameObject(x, y, z, objectID);
 
                     this.objects.push(o);
                     this.depthBuffer.pushObject(o);
@@ -122,11 +122,11 @@ export class Stage {
 
             i = (i + 1) % this.objects.length;
 
-            const o : MovingObject = this.objects[i];
-            if (o.type == MovingObjectType.DeactivedSlime) {
+            const o : GameObject = this.objects[i];
+            if (o.type == GameObjectType.DeactivedSlime) {
 
-                this.objects[this.activeSlimeIndex].changeType(MovingObjectType.DeactivedSlime);
-                o.changeType(MovingObjectType.Slime);
+                this.objects[this.activeSlimeIndex].changeType(GameObjectType.DeactivedSlime);
+                o.changeType(GameObjectType.Slime);
                 this.activeSlimeIndex = i;
                 return;
             }

@@ -10,7 +10,7 @@ import { ActionIndex } from "./keyconfig.js";
 import { Direction } from "./direction.js";
 
 
-export const enum MovingObjectType {
+export const enum GameObjectType {
 
     Unknown = 0,
     Slime = 1,
@@ -18,7 +18,7 @@ export const enum MovingObjectType {
 };
 
 
-export class MovingObject {
+export class GameObject {
 
 
     private shadowRef : Vector | null = null;
@@ -38,7 +38,7 @@ export class MovingObject {
 
     private changeAnimationFinished : boolean = true;
 
-    private _type : MovingObjectType;
+    private _type : GameObjectType;
 
 
     public get pos() : Vector {
@@ -57,7 +57,7 @@ export class MovingObject {
     }
 
 
-    constructor(x : number, y : number, z : number, type : MovingObjectType) {
+    constructor(x : number, y : number, z : number, type : GameObjectType) {
 
         this.basePos = new Vector(x, y, z);
         this.renderPos = this.basePos.clone();
@@ -71,7 +71,7 @@ export class MovingObject {
 
     private control(terrain : Terrain, prog : ProgramInterface) : void {
 
-        if (this.moving || this.type != MovingObjectType.Slime) {
+        if (this.moving || this.type != GameObjectType.Slime) {
 
             return;
         }
@@ -228,7 +228,7 @@ export class MovingObject {
 
         const FRAME_TIME : number = 15;
 
-        if (this._type == MovingObjectType.DeactivedSlime) {
+        if (this._type == GameObjectType.DeactivedSlime) {
 
             this.sprite.setFrame(3, 1);
             this.sprite.flip = Flip.None;
@@ -250,7 +250,7 @@ export class MovingObject {
         const FRAME_TIME : number = 6.0;
 
         this.determineFlip();
-        if (this._type == MovingObjectType.DeactivedSlime) {
+        if (this._type == GameObjectType.DeactivedSlime) {
 
             this.sprite.animate(1, 0, 3, FRAME_TIME, prog.step, false);
             if (this.sprite.column == 3) {
@@ -315,7 +315,7 @@ export class MovingObject {
         }
 
         let dy : number = height;
-        const objectBelow : MovingObject | null = terrain.checkObjectBelow(dx, y, dz);
+        const objectBelow : GameObject | null = terrain.checkObjectBelow(dx, y, dz);
         if (objectBelow !== null) {
 
             dy = objectBelow.pos.y + 1;
@@ -363,7 +363,7 @@ export class MovingObject {
         const dx : number = v.x*12 - 8;
         const dy : number = v.y*12 - 1;
 
-        const showFace : boolean = this._type == MovingObjectType.Slime;
+        const showFace : boolean = this._type == GameObjectType.Slime;
         const faceFront : boolean = this.faceDir == Direction.Right || this.faceDir == Direction.Down;
         if (showFace && !faceFront) {
 
@@ -385,7 +385,7 @@ export class MovingObject {
     }
 
 
-    public changeType(type : MovingObjectType, force : boolean = false) : void {
+    public changeType(type : GameObjectType, force : boolean = false) : void {
 
         this._type = type;
         if (force) {
@@ -396,10 +396,10 @@ export class MovingObject {
 
         switch (type) {
 
-        case MovingObjectType.Slime:
-        case MovingObjectType.DeactivedSlime:
+        case GameObjectType.Slime:
+        case GameObjectType.DeactivedSlime:
 
-            this.sprite.setFrame(type == MovingObjectType.Slime ? 3 : 0, 1);
+            this.sprite.setFrame(type == GameObjectType.Slime ? 3 : 0, 1);
             this.changeAnimationFinished = false;
             break;
 
