@@ -28,7 +28,7 @@ export class GameObject {
     private renderPos : Vector;
 
     private sprite : Sprite;
-    private faceDir : Direction = Direction.Down;
+    private _faceDir : Direction = Direction.Down;
     private faceOffset : Vector = new Vector();
 
     private moving : boolean = false;
@@ -39,6 +39,7 @@ export class GameObject {
     private changeAnimationFinished : boolean = true;
 
     private _type : GameObjectType;
+    private _exists : boolean = true;
 
 
     public get pos() : Vector {
@@ -51,10 +52,23 @@ export class GameObject {
     }
 
 
+    public get faceDir() : Direction {
+
+        return this._faceDir;
+    }
+
+
     public get type() : number {
 
         return this._type;
     }
+
+
+    public get exists() : boolean {
+
+        return this._exists;
+    }
+    
 
 
     constructor(x : number, y : number, z : number, type : GameObjectType) {
@@ -89,22 +103,22 @@ export class GameObject {
         if ((right.flag & InputFlag.DownOrPressed) != 0 && right.timestamp >= maxTimestamp) {
 
             dirx = 1;
-            this.faceDir = Direction.Right;
+            this._faceDir = Direction.Right;
         }
         else if ((left.flag & InputFlag.DownOrPressed) != 0 && left.timestamp >= maxTimestamp) {
 
             dirx = -1;
-            this.faceDir = Direction.Left;
+            this._faceDir = Direction.Left;
         }
         else if ((down.flag & InputFlag.DownOrPressed) != 0 && down.timestamp >= maxTimestamp) {
 
             dirz = 1;
-            this.faceDir = Direction.Down;
+            this._faceDir = Direction.Down;
         }
         else if ((up.flag & InputFlag.DownOrPressed) != 0 && up.timestamp >= maxTimestamp) {
 
             dirz = -1;
-            this.faceDir = Direction.Up;
+            this._faceDir = Direction.Up;
         }
 
         if (dirx != 0 || dirz != 0) {
@@ -219,7 +233,7 @@ export class GameObject {
     private determineFlip() : void {
 
         this.sprite.flip = 
-            this.faceDir == Direction.Left || this.faceDir == Direction.Down ? 
+            this._faceDir == Direction.Left || this._faceDir == Direction.Down ? 
                 Flip.Horizontal : Flip.None;
     }
 
@@ -364,7 +378,7 @@ export class GameObject {
         const dy : number = v.y*12 - 1;
 
         const showFace : boolean = this._type == GameObjectType.Slime;
-        const faceFront : boolean = this.faceDir == Direction.Right || this.faceDir == Direction.Down;
+        const faceFront : boolean = this._faceDir == Direction.Right || this._faceDir == Direction.Down;
         if (showFace && !faceFront) {
 
             this.drawFace(canvas, bmp, dx, dy);
@@ -406,6 +420,30 @@ export class GameObject {
         default:
             break;
         }
-        
+    }
+
+
+    public respawn(pos : Vector, type : GameObjectType, faceDir : Direction) : void {
+
+        this.basePos.makeEqual(pos);
+        this.targetPos.makeEqual(this.basePos);
+        this.renderPos.makeEqual(this.basePos);
+
+        this._faceDir = faceDir;
+        // TODO: Reset sprite
+
+        this._type = type;
+
+        this.moving = false;
+        this.falling = false;
+        this.moveTimer = 0.0;
+        this.changeAnimationFinished = true;
+        this._exists = true;
+    }
+
+
+    public forceKill() : void {
+
+        this._exists = false;
     }
 }

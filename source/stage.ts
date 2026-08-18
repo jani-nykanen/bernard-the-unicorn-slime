@@ -12,6 +12,7 @@ import { GameObject, GameObjectType } from "./gameobject.js";
 import { Terrain } from "./terrain.js";
 import { ActionIndex } from "./keyconfig.js";
 import { InputFlag } from "./keyboard.js";
+import { ObjectInfo, PuzzleState, StateBuffer } from "./statebuffer.js";
 
 
 export class Stage {
@@ -23,6 +24,12 @@ export class Stage {
     private objects : GameObject[];
     private activeSlimeIndex : number = -1;
     private depthBuffer : DepthObjectBuffer;
+    private stateBuffer : StateBuffer;
+    private activeState : PuzzleState;
+    private initialState : PuzzleState;
+    private info : ObjectInfo = new ObjectInfo();
+
+    private wasAnythingMoving : boolean = false;
 
     public readonly width : number;
     public readonly height : number;
@@ -31,6 +38,9 @@ export class Stage {
 
     constructor(heightData : number[], objectData : number[], width : number, depth : number) {
 
+        const MAX_STATE_COUNT : number = 32;
+        const STATE_BUFFER_MAX_OBJECT_COUNT : number = 32;
+
         this.terrain = new Terrain(heightData, width, depth);
 
         this.width = width;
@@ -38,10 +48,61 @@ export class Stage {
         this.height = this.terrain.maxHeight;
 
         this.depthBuffer = new DepthObjectBuffer();
+        this.stateBuffer = new StateBuffer(MAX_STATE_COUNT, STATE_BUFFER_MAX_OBJECT_COUNT);
+        this.activeState = new PuzzleState(STATE_BUFFER_MAX_OBJECT_COUNT);
+
         this.walls = new Array<Wall> (width*depth);
         this.objects = new Array<GameObject> ();
+
         this.constructWalls();
         this.createObjects(objectData);
+        this.refreshState();
+        this.stateBuffer.pushState(this.activeState);
+
+        this.initialState = new PuzzleState(STATE_BUFFER_MAX_OBJECT_COUNT);
+        this.initialState.makeEqual(this.activeState);
+    }
+
+
+    private refreshState() : void {
+
+        this.activeState.flush();
+        for (const o of this.objects) {
+
+            this.info.pos.makeEqual(o.pos);
+            this.info.type = o.type;
+            this.info.active = o.exists;
+            this.info.faceDir = o.faceDir;
+
+            this.activeState.pushObject(this.info);
+        }
+    }
+
+
+    private recoverState() : void {
+
+        for (const o of this.objects) {
+
+            o.forceKill();
+        }
+
+        let i : number = 0;
+        this.activeState.iterateObjects((o : ObjectInfo) : void => {
+
+            this.objects[i].respawn(o.pos, o.type, o.faceDir);
+            if (o.type == GameObjectType.Slime) {
+
+                this.activeSlimeIndex = i;
+            }
+            ++ i;
+        });
+
+        this.terrain.flush(true);
+        for (const o of this.objects) {
+
+            const p : Vector = o.pos;
+            this.terrain.markObject(p.x, p.y, p.z, o);
+        }
     }
 
 
@@ -145,11 +206,33 @@ export class Stage {
             o.update(this.terrain, prog);
             anythingMoving ||= o.isMoving();
         }
+        
+        if (!anythingMoving && this.wasAnythingMoving) {
 
-        if (!anythingMoving && 
-            prog.keyboard.getActionState(ActionIndex.ChangeActive).flag == InputFlag.Pressed) {
+            this.stateBuffer.pushState(this.activeState);
+            this.refreshState();
+        }
+        this.wasAnythingMoving = anythingMoving;
 
-            this.changeActiveSlime();
+        if (!anythingMoving) {
+            
+            if (prog.keyboard.getActionState(ActionIndex.ChangeActive).flag == InputFlag.Pressed) {
+
+                this.changeActiveSlime();
+            }
+            else if (prog.keyboard.getActionState(ActionIndex.Undo).flag == InputFlag.Pressed) {
+
+                if (this.stateBuffer.undo(this.activeState)) {
+                
+                    this.recoverState();
+                }
+            }
+            else if (prog.keyboard.getActionState(ActionIndex.Reset).flag == InputFlag.Pressed) {
+
+                this.stateBuffer.pushState(this.activeState);
+                this.activeState.makeEqual(this.initialState);
+                this.recoverState();
+            }
         }
     }
 

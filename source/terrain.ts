@@ -114,18 +114,19 @@ export class Terrain {
     }
 
  
-    public flush() : void {
+    public flush(flushObjectPosition : boolean = false) : void {
 
         for (const k in this.shadowActive) {
 
             this.shadowActive[k] = false;
         }
 
-        /*
-        for (const k in this.objectPositions) {
+        if (flushObjectPosition) {
+            
+            for (const k in this.objectPositions) {
 
-            this.objectPositions[k] = null;
+                this.objectPositions[k] = null;
+            }
         }
-        */
     }
 }

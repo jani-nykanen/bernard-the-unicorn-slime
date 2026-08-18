@@ -4,14 +4,14 @@ import { Vector } from "./vector.js";
 
 
 
-class ObjectInfo {
+export class ObjectInfo {
 
     
     public type : GameObjectType = GameObjectType.Unknown;
     public faceDir : Direction = Direction.None;
-    public pos : Vector = new Vector();
-
     public active : boolean = false;
+
+    public readonly pos : Vector = new Vector();
 
 
     public makeEqual(o : ObjectInfo) : void {
@@ -24,10 +24,11 @@ class ObjectInfo {
 }
 
 
-class PuzzleState {
+export class PuzzleState {
 
 
-    public objects : ObjectInfo[] = [];
+    private objects : ObjectInfo[] = [];
+    private activeIndex : number = 0;
 
 
     constructor(maxObjectCount : number) {
@@ -49,7 +50,45 @@ class PuzzleState {
                 this.objects[i].active = false;
                 continue;
             }
+            this.objects[i].makeEqual(state.objects[i]);
+        }
 
+        this.activeIndex = state.objects.length;
+    }
+
+
+    public flush() : void {
+
+        for (const o of this.objects) {
+
+            o.active = false;
+        }
+        this.activeIndex = 0;
+    }
+
+
+    public pushObject(o : ObjectInfo) : void {
+
+        if (this.activeIndex >= this.objects.length) {
+
+            return;
+        }
+
+        this.objects[this.activeIndex].makeEqual(o);
+        ++ this.activeIndex;
+    }
+
+
+    public iterateObjects(cb : (o : ObjectInfo) => void) : void {
+
+        for (let i : number = 0; i < this.activeIndex; ++ i) {
+
+            const o : ObjectInfo = this.objects[i];
+            if (!o.active) {
+
+                continue;
+            }
+            cb(o);
         }
     }
 }
@@ -80,7 +119,7 @@ export class StateBuffer {
         this.index = (this.index + 1) % this.states.length;
         if (this.index == this.firstIndex) {
 
-            ++ this.firstIndex;
+            this.firstIndex = (this.firstIndex + 1) % this.states.length;;
         }
     }
 
