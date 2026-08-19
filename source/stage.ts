@@ -219,6 +219,24 @@ export class Stage {
             }
         }
         while (somethingNewMoved);
+
+        // Resolve conflicts (a hacky workaround)
+        let conflicts : boolean = false;
+        do {
+
+            conflicts = false;
+            for (let i : number = 0; i < this.objects.length; ++ i) {
+
+                for (let j : number = i + 1; j < this.objects.length; ++ j) {
+
+                    if (this.objects[i].checkConflicts(this.objects[j])) {
+
+                        conflicts = true;
+                    }
+                }
+            }
+        }
+        while (conflicts);
         
         if (!anythingMoving && this.wasAnythingMoving) {
 

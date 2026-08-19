@@ -34,4 +34,12 @@ export class Vector {
 
         return new Vector(this.x, this.y, this.z);
     }
+
+
+    public equals(v : Vector, threshold : number = 0.001) : boolean {
+
+        return Math.abs(this.x - v.x) < threshold && 
+            Math.abs(this.y - v.y) < threshold && 
+            Math.abs(this.z - v.z) < threshold;
+    }
 }

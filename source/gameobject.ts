@@ -35,6 +35,7 @@ export class GameObject {
     private moveTimer : number = 0.0;
     private gravity : number = 0.0;
     private falling : boolean = false;
+    private jumping : boolean = false;
 
     private changeAnimationFinished : boolean = true;
 
@@ -108,6 +109,8 @@ export class GameObject {
 
         this.moving = true;
         this.moveTimer = 0.0;
+        this.jumping = this.type == GameObjectType.Slime && 
+            (objectBelow !== null || dy < y);
 
         this.targetPos.x = dx;
         this.targetPos.y = dy;
@@ -253,7 +256,7 @@ export class GameObject {
             this.renderPos.x = (1.0 - t)*this.basePos.x + t*this.targetPos.x;
             this.renderPos.z = (1.0 - t)*this.basePos.z + t*this.targetPos.z;
 
-            if (this.targetPos.y < this.basePos.y) {
+            if (this.jumping) {
 
                 this.renderPos.y = this.basePos.y + Math.sin(t*Math.PI)*JUMP_HEIGHT;
             }
@@ -459,6 +462,22 @@ export class GameObject {
         default:
             break;
         }
+    }
+
+
+    public checkConflicts(o : GameObject) : boolean {
+
+        if (!this.moving || !o.moving || !this.exists || !o.exists) {
+
+            return false;
+        }
+
+        if (this.targetPos.equals(o.targetPos)) {
+
+            ++ this.targetPos.y;
+            return true;
+        }
+        return false;
     }
 
 
