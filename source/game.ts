@@ -11,7 +11,7 @@ import { Stage } from "./stage.js";
 const TEST_HEIGHT_MAP : number[] = [
 
     3, 4, 3, 2,
-    2, 3, 2, 1,
+    2, 3, 3, 1,
     1, 1, 0, 1,
     1, 0, 0, 0,
 ];
@@ -19,7 +19,7 @@ const TEST_HEIGHT_MAP : number[] = [
 const TEST_OBJECT_MAP : number[] = [
 
     0, 1, 0, 0,
-    2, 0, 0, 0,
+    2, 0, 3, 0,
     0, 2, 0, 2,
     0, 0, 0, 0,
 ];

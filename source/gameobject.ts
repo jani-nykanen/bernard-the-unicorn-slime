@@ -15,6 +15,7 @@ export const enum GameObjectType {
     Unknown = 0,
     Slime = 1,
     DeactivedSlime = 2,
+    Barrel = 3,
 };
 
 
@@ -193,7 +194,7 @@ export class GameObject {
 
         if (dirx != 0 || dirz != 0) {
 
-            if (this.type == GameObjectType.DeactivedSlime) {
+            if (this.type != GameObjectType.Slime) {
 
                 if (!terrain.activeSlimeNearby(
                     this.basePos.x - dirx, this.basePos.y, this.basePos.z - dirz, 
@@ -202,7 +203,6 @@ export class GameObject {
                     return;
                 }
             }
-
             this.move(terrain, dirx, dirz);
         }
     }
@@ -379,7 +379,7 @@ export class GameObject {
     }
 
 
-    private drawFace(canvas : RenderTarget, bmp : Bitmap, dx : number, dy : number) : void {
+    private drawSlimeFace(canvas : RenderTarget, bmp : Bitmap, dx : number, dy : number) : void {
 
         if (!this.changeAnimationFinished) {
 
@@ -389,6 +389,24 @@ export class GameObject {
         canvas.drawBitmap(bmp, this.sprite.flip,
              dx + this.faceOffset.x, 
              dy + this.faceOffset.y, 0, 32, 8, 16);
+    }
+
+
+    private drawSlime(canvas : RenderTarget, bmp : Bitmap, dx : number, dy : number) : void {
+
+        const showFace : boolean = this._type == GameObjectType.Slime; // i.e., active slime
+        const faceFront : boolean = this._faceDir == Direction.Right || this._faceDir == Direction.Down;
+        if (showFace && !faceFront) {
+
+            this.drawSlimeFace(canvas, bmp, dx, dy);
+        }
+        this.sprite.draw(canvas, bmp, dx, dy);
+        if (showFace && faceFront) {
+
+            // Face
+            this.drawSlimeFace(canvas, bmp, dx, dy);
+        }
+        this.drawShadow(canvas, bmp);
     }
 
 
@@ -419,19 +437,21 @@ export class GameObject {
         const dx : number = v.x*12 - 8;
         const dy : number = v.y*12 - 1;
 
-        const showFace : boolean = this._type == GameObjectType.Slime;
-        const faceFront : boolean = this._faceDir == Direction.Right || this._faceDir == Direction.Down;
-        if (showFace && !faceFront) {
+        switch (this.type) {
 
-            this.drawFace(canvas, bmp, dx, dy);
-        }
-        this.sprite.draw(canvas, bmp, dx, dy);
-        if (showFace && faceFront) {
+        case GameObjectType.Slime:
+            // fallthrough
+        case GameObjectType.DeactivedSlime:
+            this.drawSlime(canvas, bmp, dx, dy);
+            break;
 
-            // Face
-            this.drawFace(canvas, bmp, dx, dy);
+        case GameObjectType.Barrel:
+            canvas.drawBitmap(bmp, Flip.None, dx, dy - 3, 48, 32, 16, 24);
+            break;
+
+        default:
+            break;
         }
-        this.drawShadow(canvas, bmp);
     }
 
 
