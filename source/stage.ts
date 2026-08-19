@@ -189,6 +189,9 @@ export class Stage {
                 this.objects[this.activeSlimeIndex].changeType(GameObjectType.DeactivedSlime);
                 o.changeType(GameObjectType.Slime);
                 this.activeSlimeIndex = i;
+
+                this.stateBuffer.pushState(this.activeState);
+                this.refreshState();
                 return;
             }
         }
@@ -196,16 +199,26 @@ export class Stage {
     }
 
 
-    public update(prog : ProgramInterface) : void {
-
-        this.terrain.flush();
+    private updateObjects(prog : ProgramInterface) : void {
 
         let anythingMoving : boolean = false;
-        for (const o of this.objects) {
+        let somethingNewMoved : boolean = false;
+        const canMove : boolean = !this.wasAnythingMoving;
+        do {
 
-            o.update(this.terrain, prog);
-            anythingMoving ||= o.isMoving();
+            somethingNewMoved = false;
+            for (const o of this.objects) {
+
+                const wasMoving : boolean = o.isMoving();
+                o.update(this.terrain, canMove, prog);
+                if (!wasMoving && o.isMoving()) {
+
+                    somethingNewMoved = true;
+                }
+                anythingMoving ||= o.isMoving();
+            }
         }
+        while (somethingNewMoved);
         
         if (!anythingMoving && this.wasAnythingMoving) {
 
@@ -213,26 +226,43 @@ export class Stage {
             this.refreshState();
         }
         this.wasAnythingMoving = anythingMoving;
+    }
 
-        if (!anythingMoving) {
-            
-            if (prog.keyboard.getActionState(ActionIndex.ChangeActive).flag == InputFlag.Pressed) {
 
-                this.changeActiveSlime();
-            }
-            else if (prog.keyboard.getActionState(ActionIndex.Undo).flag == InputFlag.Pressed) {
+    private checkKeyboardActions(prog : ProgramInterface) {
 
-                if (this.stateBuffer.undo(this.activeState)) {
+        if (this.wasAnythingMoving) {
+
+            return;
+        }
+
+        if (prog.keyboard.getActionState(ActionIndex.ChangeActive).flag == InputFlag.Pressed) {
+
+            this.changeActiveSlime();
+        }
+        else if (prog.keyboard.getActionState(ActionIndex.Undo).flag == InputFlag.Pressed) {
+
+            if (this.stateBuffer.undo(this.activeState)) {
                 
-                    this.recoverState();
-                }
-            }
-            else if (prog.keyboard.getActionState(ActionIndex.Reset).flag == InputFlag.Pressed) {
-
-                this.stateBuffer.pushState(this.activeState);
-                this.activeState.makeEqual(this.initialState);
                 this.recoverState();
             }
+        }
+        else if (prog.keyboard.getActionState(ActionIndex.Reset).flag == InputFlag.Pressed) {
+
+            this.stateBuffer.pushState(this.activeState);
+            this.activeState.makeEqual(this.initialState);
+            this.recoverState();
+        }
+    }
+
+
+    public update(prog : ProgramInterface) : void {
+
+        this.terrain.flush();
+        this.updateObjects(prog);
+        if (!this.wasAnythingMoving) {
+            
+            this.checkKeyboardActions(prog);
         }
     }
 
@@ -249,7 +279,6 @@ export class Stage {
         this.depthBuffer.sort();
         this.depthBuffer.draw(canvas, bmpBase);
 
-        //this.drawTerrain(canvas, bmpBase, canvas.height - centery);
         canvas.moveTo();
     }
 }

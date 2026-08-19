@@ -83,9 +83,76 @@ export class GameObject {
     }
 
 
+    private move(terrain : Terrain, dirx : number, dirz : number) : boolean {
+
+        const x : number = (this.basePos.x) | 0;
+        const y : number = (this.basePos.y) | 0;
+        const z : number = (this.basePos.z) | 0;
+
+        const dx : number = x + dirx;
+        const dz : number = z + dirz;
+
+        let height : number = terrain.heightAt(dx, dz) + 1;
+        if (height <= 0 || height > (this.basePos.y | 0) ||
+            terrain.objectAt(dx, y, dz) !== null) {
+
+            return false;
+        }
+
+        let dy : number = height;
+        const objectBelow : GameObject | null = terrain.checkObjectBelow(dx, y, dz);
+        if (objectBelow !== null) {
+
+            dy = objectBelow.pos.y + 1;
+        }
+
+        this.moving = true;
+        this.moveTimer = 0.0;
+
+        this.targetPos.x = dx;
+        this.targetPos.y = dy;
+        this.targetPos.z = dz;
+        
+        this.renderPos.makeEqual(this.basePos);
+
+        this.falling = false;
+
+        terrain.markObject(x, y, z, null);
+        // terrain.markObject(dx, dy, dz, this);
+
+        return true;
+    }
+
+
+    private checkFalling(terrain : Terrain, prog : ProgramInterface) : boolean {
+
+        const x : number = (this.basePos.x) | 0;
+        const y : number = (this.basePos.y) | 0;
+        const z : number = (this.basePos.z) | 0;
+
+        const floorPos : number = terrain.firstSolidTileHeightBelow(x, y, z) + 1;
+        if (floorPos < y) {
+
+            this.falling = true;
+            this.moving = true;
+            this.gravity = 0.0;
+
+            this.targetPos.y = floorPos;
+            terrain.markObject(x, y, z, null);
+            return true;
+        }
+        return false;
+    }
+
+
     private control(terrain : Terrain, prog : ProgramInterface) : void {
 
-        if (this.moving || this.type != GameObjectType.Slime) {
+        if (this.moving) {
+
+            return;
+        }
+
+        if (this.checkFalling(terrain, prog)) {
 
             return;
         }
@@ -122,6 +189,16 @@ export class GameObject {
         }
 
         if (dirx != 0 || dirz != 0) {
+
+            if (this.type == GameObjectType.DeactivedSlime) {
+
+                if (!terrain.activeSlimeNearby(
+                    this.basePos.x - dirx, this.basePos.y, this.basePos.z - dirz, 
+                    terrain.heightAt(this.basePos.x, this.basePos.z))) {
+
+                    return;
+                }
+            }
 
             this.move(terrain, dirx, dirz);
         }
@@ -312,48 +389,7 @@ export class GameObject {
     }
 
 
-    private move(terrain : Terrain, dirx : number, dirz : number) : boolean {
-
-        const x : number = (this.basePos.x) | 0;
-        const y : number = (this.basePos.y) | 0;
-        const z : number = (this.basePos.z) | 0;
-
-        const dx : number = x + dirx;
-        const dz : number = z + dirz;
-
-        let height : number = terrain.heightAt(dx, dz) + 1;
-        if (height <= 0 || height > (this.basePos.y | 0) ||
-            terrain.objectAt(dx, y, dz) !== null) {
-
-            return false;
-        }
-
-        let dy : number = height;
-        const objectBelow : GameObject | null = terrain.checkObjectBelow(dx, y, dz);
-        if (objectBelow !== null) {
-
-            dy = objectBelow.pos.y + 1;
-        }
-
-        this.moving = true;
-        this.moveTimer = 0.0;
-
-        this.targetPos.x = dx;
-        this.targetPos.y = dy;
-        this.targetPos.z = dz;
-        
-        this.renderPos.makeEqual(this.basePos);
-
-        this.falling = false;
-
-        terrain.markObject(x, y, z, null);
-        // terrain.markObject(dx, dy, dz, this);
-
-        return true;
-    }
-
-
-    public update(terrain : Terrain, prog : ProgramInterface) : void {
+    public update(terrain : Terrain, canMove : boolean, prog : ProgramInterface) : void {
                 
         if (!this.changeAnimationFinished) {
 
@@ -361,7 +397,10 @@ export class GameObject {
             return;
         }
 
-        this.control(terrain, prog);
+        if (canMove) {
+        
+            this.control(terrain, prog);
+        }
         this.animate(prog);
         this.computeFaceProperties();
 
