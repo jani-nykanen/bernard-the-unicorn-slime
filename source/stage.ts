@@ -2,17 +2,16 @@ import { BitmapIndex } from "./assetindex.js";
 import { AssetManager } from "./assetmanager.js";
 import { Bitmap } from "./bitmap.js";
 import { DepthObjectBuffer } from "./depthobjectbuffer.js";
-import { isometricProjection } from "./math.js";
-import { MASTER_PALETTE } from "./palette.js";
 import { ProgramInterface } from "./program.js";
-import { Flip, RenderTarget } from "./rendertarget.js";
+import { RenderTarget } from "./rendertarget.js";
 import { Vector } from "./vector.js";
-import { Wall } from "./wall.js";
 import { GameObject, GameObjectType } from "./gameobject.js";
 import { Terrain } from "./terrain.js";
 import { ActionIndex } from "./keyconfig.js";
 import { InputFlag } from "./keyboard.js";
 import { ObjectInfo, PuzzleState, StateBuffer } from "./statebuffer.js";
+import { FloorPiece } from "./floorpiece.js";
+import { WallOrientation, WallPiece } from "./wallpiece.js";
 
 
 export class Stage {
@@ -20,7 +19,9 @@ export class Stage {
 
     private terrain : Terrain;
 
-    private walls : Wall[];
+    private floorPieces : FloorPiece[] = [];
+    private wallPieces : WallPiece[] = [];
+
     private objects : GameObject[];
     private activeSlimeIndex : number = -1;
     private depthBuffer : DepthObjectBuffer;
@@ -50,11 +51,11 @@ export class Stage {
         this.depthBuffer = new DepthObjectBuffer();
         this.stateBuffer = new StateBuffer(MAX_STATE_COUNT, STATE_BUFFER_MAX_OBJECT_COUNT);
         this.activeState = new PuzzleState(STATE_BUFFER_MAX_OBJECT_COUNT);
-
-        this.walls = new Array<Wall> (width*depth);
         this.objects = new Array<GameObject> ();
 
-        this.constructWalls();
+        this.contructFloorAndWalls();
+
+        // this.constructWalls();
         this.createObjects(objectData);
         this.refreshState();
         this.stateBuffer.pushState(this.activeState);
@@ -69,7 +70,7 @@ export class Stage {
         this.activeState.flush();
         for (const o of this.objects) {
 
-            this.info.pos.makeEqual(o.pos);
+            this.info.pos.makeEqual(o.logicalPos);
             this.info.type = o.type;
             this.info.active = o.exists;
             this.info.faceDir = o.faceDir;
@@ -100,7 +101,7 @@ export class Stage {
         this.terrain.flush(true);
         for (const o of this.objects) {
 
-            const p : Vector = o.pos;
+            const p : Vector = o.logicalPos;
             this.terrain.markObject(p.x, p.y, p.z, o);
         }
     }
@@ -126,16 +127,36 @@ export class Stage {
     }
 
 
-    private constructWalls() : void {
+    private contructFloorAndWalls() : void {
 
         for (let z : number = 0; z < this.depth; ++ z) {
 
             for (let x : number = 0; x < this.width; ++ x) {
 
                 const y : number = this.terrain.heightAt(x, z);
-                const w : Wall = new Wall(x, y, z, this.computeNeighbors(x, z), this.terrain);
-                this.walls[z*this.width + x] = w;
-                this.depthBuffer.pushObject(w);
+                const o : FloorPiece = new FloorPiece(x, y, z, this.terrain);
+                this.floorPieces.push(o);
+                this.depthBuffer.pushObject(o);
+
+                const neighborhood : number[] = this.computeNeighbors(x, z);
+
+                const front : number = this.terrain.heightAt(x, z + 1);
+                for (let dy : number = y; dy > front; -- dy) {
+
+                    const o : WallPiece = new WallPiece(x, dy, z, 
+                        WallOrientation.Left, neighborhood);
+                    this.wallPieces.push(o);
+                    this.depthBuffer.pushObject(o)
+                }
+
+                const right : number = this.terrain.heightAt(x + 1, z);
+                for (let dy : number = y; dy > right; -- dy) {
+
+                    const o : WallPiece = new WallPiece(x, dy, z, 
+                        WallOrientation.Right, neighborhood);
+                    this.wallPieces.push(o);
+                    this.depthBuffer.pushObject(o)
+                }
             }
         }
     }

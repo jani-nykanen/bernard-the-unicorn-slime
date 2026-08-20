@@ -27,6 +27,7 @@ export class GameObject {
     private basePos : Vector;
     private targetPos : Vector;
     private renderPos : Vector;
+    private depthTestPos : Vector
 
     private sprite : Sprite;
     private _faceDir : Direction = Direction.Down;
@@ -44,13 +45,15 @@ export class GameObject {
     private _exists : boolean = true;
 
 
+    public get logicalPos() : Vector {
+
+        return this.basePos;
+    }
+
+
     public get pos() : Vector {
 
-        if (this.moving && this.moveTimer > 0.5) {
-
-            return this.targetPos;
-        }
-        return this.basePos;
+        return this.depthTestPos;
     }
 
 
@@ -78,6 +81,7 @@ export class GameObject {
         this.basePos = new Vector(x, y, z);
         this.renderPos = this.basePos.clone();
         this.targetPos = this.basePos.clone();
+        this.depthTestPos = this.basePos.clone();
 
         this.sprite = new Sprite(16, 16);
 
@@ -105,13 +109,14 @@ export class GameObject {
         const objectBelow : GameObject | null = terrain.checkObjectBelow(dx, y, dz);
         if (objectBelow !== null) {
 
-            dy = objectBelow.pos.y + 1;
+            dy = objectBelow.logicalPos.y + 1;
         }
 
         this.moving = true;
         this.moveTimer = 0.0;
         this.jumping = this.type == GameObjectType.Slime && 
-            (objectBelow !== null || dy < y);
+            ((objectBelow !== null || dy < y) ||
+            terrain.checkObjectBelow(x, y, z) !== null);
 
         this.targetPos.x = dx;
         this.targetPos.y = dy;
@@ -230,7 +235,8 @@ export class GameObject {
 
         if (!this.moving) {
 
-            this.renderPos.makeEqual(this.pos);
+            this.depthTestPos.makeEqual(this.basePos);
+            this.renderPos.makeEqual(this.basePos);
             return;
         }
 
@@ -238,8 +244,7 @@ export class GameObject {
 
             this.moveTimer += MOVE_SPEED*prog.step;
             if (this.moveTimer >= 1.0) {
-
-                this.falling = true;
+                
                 this.renderPos.x = this.targetPos.x;
                 this.renderPos.z = this.targetPos.z;
                 this.gravity = INITIAL_GRAVITY;
@@ -247,7 +252,9 @@ export class GameObject {
                 if ((this.targetPos.y | 0) == (this.basePos.y | 0)) {
 
                     this.terminateMovement(terrain);
+                    return;
                 }
+                this.falling = true;
                 return;
             }
 
@@ -263,7 +270,7 @@ export class GameObject {
             
             return;
         }
-        
+
         this.gravity = Math.min(MAX_GRAVITY, this.gravity + GRAVITY_DELTA*prog.step);
         this.renderPos.y -= this.gravity*prog.step;
         if (this.renderPos.y <= this.targetPos.y) {
@@ -276,6 +283,11 @@ export class GameObject {
     private markShadows(terrain : Terrain) : void {
 
         if (!this.moving) {
+
+            return;
+        }
+
+        if (!this.jumping && (this.targetPos.y | 0) == (this.basePos.y | 0)) {
 
             return;
         }
@@ -364,6 +376,15 @@ export class GameObject {
     }
 
 
+    private computeDepthTestPos() : void {
+
+        this.depthTestPos.setValues(
+                Math.round(this.renderPos.x), 
+                Math.round(this.renderPos.y), 
+                Math.round(this.targetPos.z));
+    }
+
+
     private drawShadow(canvas : RenderTarget, bmp : Bitmap) : void {
 
         if (this.shadowRef === null) {
@@ -406,7 +427,6 @@ export class GameObject {
             // Face
             this.drawSlimeFace(canvas, bmp, dx, dy);
         }
-        this.drawShadow(canvas, bmp);
     }
 
 
@@ -426,6 +446,8 @@ export class GameObject {
         this.computeFaceProperties();
 
         this.updateMovement(terrain, prog);
+        this.computeDepthTestPos();
+
         this.markShadows(terrain);
         this.checkOverlayingShadow(terrain);
     }
@@ -452,6 +474,8 @@ export class GameObject {
         default:
             break;
         }
+
+        this.drawShadow(canvas, bmp);
     }
 
 

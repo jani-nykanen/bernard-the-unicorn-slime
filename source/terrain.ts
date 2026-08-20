@@ -133,7 +133,7 @@ export class Terrain {
 
             return this.heightAt(x, z);
         }
-        return o.pos.y;
+        return o.logicalPos.y;
     }
 
     
