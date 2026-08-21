@@ -10,8 +10,6 @@ import { Terrain } from "./terrain.js";
 import { ActionIndex } from "./keyconfig.js";
 import { InputFlag } from "./keyboard.js";
 import { ObjectInfo, PuzzleState, StateBuffer } from "./statebuffer.js";
-import { FloorPiece } from "./floorpiece.js";
-import { WallOrientation, WallPiece } from "./wallpiece.js";
 
 
 export class Stage {
@@ -19,11 +17,7 @@ export class Stage {
 
     private terrain : Terrain;
 
-    private floorPieces : FloorPiece[] = [];
-    private wallPieces : WallPiece[] = [];
-
     private objects : GameObject[];
-    private activeSlimeIndex : number = -1;
     private depthBuffer : DepthObjectBuffer;
     private stateBuffer : StateBuffer;
     private activeState : PuzzleState;
@@ -42,18 +36,16 @@ export class Stage {
         const MAX_STATE_COUNT : number = 32;
         const STATE_BUFFER_MAX_OBJECT_COUNT : number = 32;
 
-        this.terrain = new Terrain(heightData, width, depth);
+        this.depthBuffer = new DepthObjectBuffer();
+        this.terrain = new Terrain(heightData, width, depth, this.depthBuffer);
 
         this.width = width;
         this.depth = depth;
         this.height = this.terrain.maxHeight;
 
-        this.depthBuffer = new DepthObjectBuffer();
         this.stateBuffer = new StateBuffer(MAX_STATE_COUNT, STATE_BUFFER_MAX_OBJECT_COUNT);
         this.activeState = new PuzzleState(STATE_BUFFER_MAX_OBJECT_COUNT);
         this.objects = new Array<GameObject> ();
-
-        this.contructFloorAndWalls();
 
         // this.constructWalls();
         this.createObjects(objectData);
@@ -91,10 +83,6 @@ export class Stage {
         this.activeState.iterateObjects((o : ObjectInfo) : void => {
 
             this.objects[i].respawn(o.pos, o.type, o.faceDir);
-            if (o.type == GameObjectType.Slime) {
-
-                this.activeSlimeIndex = i;
-            }
             ++ i;
         });
 
@@ -127,41 +115,6 @@ export class Stage {
     }
 
 
-    private contructFloorAndWalls() : void {
-
-        for (let z : number = 0; z < this.depth; ++ z) {
-
-            for (let x : number = 0; x < this.width; ++ x) {
-
-                const y : number = this.terrain.heightAt(x, z);
-                const o : FloorPiece = new FloorPiece(x, y, z, this.terrain);
-                this.floorPieces.push(o);
-                this.depthBuffer.pushObject(o);
-
-                const neighborhood : number[] = this.computeNeighbors(x, z);
-
-                const front : number = this.terrain.heightAt(x, z + 1);
-                for (let dy : number = y; dy > front; -- dy) {
-
-                    const o : WallPiece = new WallPiece(x, dy, z, 
-                        WallOrientation.Left, neighborhood);
-                    this.wallPieces.push(o);
-                    this.depthBuffer.pushObject(o)
-                }
-
-                const right : number = this.terrain.heightAt(x + 1, z);
-                for (let dy : number = y; dy > right; -- dy) {
-
-                    const o : WallPiece = new WallPiece(x, dy, z, 
-                        WallOrientation.Right, neighborhood);
-                    this.wallPieces.push(o);
-                    this.depthBuffer.pushObject(o)
-                }
-            }
-        }
-    }
-    
-
     private createObjects(objectData : number[]) : void {
 
         const MOVING_OBJECT_FIRST : number = 1;
@@ -186,37 +139,9 @@ export class Stage {
                     this.objects.push(o);
                     this.depthBuffer.pushObject(o);
                     this.terrain.markObject(x, y, z, o);
-
-                    if (objectID == 1) {
-
-                        this.activeSlimeIndex = this.objects.length - 1;
-                    }
                 }
             }
         }
-    }
-
-
-    private changeActiveSlime() : void {
-
-        let i : number = this.activeSlimeIndex;
-        do {
-
-            i = (i + 1) % this.objects.length;
-
-            const o : GameObject = this.objects[i];
-            if (o.type == GameObjectType.DeactivedSlime) {
-
-                this.objects[this.activeSlimeIndex].changeType(GameObjectType.DeactivedSlime);
-                o.changeType(GameObjectType.Slime);
-                this.activeSlimeIndex = i;
-
-                this.stateBuffer.pushState(this.activeState);
-                this.refreshState();
-                return;
-            }
-        }
-        while (i != this.activeSlimeIndex);
     }
 
 
@@ -275,11 +200,7 @@ export class Stage {
             return;
         }
 
-        if (prog.keyboard.getActionState(ActionIndex.ChangeActive).flag == InputFlag.Pressed) {
-
-            this.changeActiveSlime();
-        }
-        else if (prog.keyboard.getActionState(ActionIndex.Undo).flag == InputFlag.Pressed) {
+        if (prog.keyboard.getActionState(ActionIndex.Undo).flag == InputFlag.Pressed) {
 
             if (this.stateBuffer.undo(this.activeState)) {
                 

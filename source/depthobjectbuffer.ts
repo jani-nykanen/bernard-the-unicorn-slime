@@ -48,6 +48,10 @@ export class DepthObjectBuffer {
 
         for (const d of this.objects) {
 
+            if (!d.exists) {
+
+                continue;
+            }
             cb(d);
         }
     }
@@ -57,6 +61,10 @@ export class DepthObjectBuffer {
 
         for (const d of this.objects) {
 
+            if (!d.exists) {
+
+                continue;
+            }
             d.draw(canvas, bmp);
         }
     }

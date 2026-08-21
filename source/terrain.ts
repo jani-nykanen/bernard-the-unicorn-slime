@@ -1,5 +1,7 @@
 import { GameObject, GameObjectType } from "./gameobject.js";
 import { Vector } from "./vector.js";
+import { Tile, TileFlags } from "./tile.js";
+import { DepthObjectBuffer } from "./depthobjectbuffer.js";
 
 
 export class Terrain {
@@ -9,13 +11,17 @@ export class Terrain {
     private shadowActive : boolean[];
     private shadowPositions : Vector[];
     private objectPositions : (GameObject | null) [];
+    private tiles : Tile[] = [];
+
+    private readonly depthbuffer : DepthObjectBuffer;
 
     public readonly width : number;
     public readonly depth : number;
     public readonly maxHeight : number;
 
 
-    constructor(data : number[], width : number, depth : number) {
+    constructor(data : number[], width : number, depth : number, 
+        depthBuffer : DepthObjectBuffer) {
 
         const dummy : Vector = new Vector();
 
@@ -24,9 +30,75 @@ export class Terrain {
         this.depth = depth;
         this.maxHeight = Math.max(...data);
 
+        this.depthbuffer = depthBuffer;
+
         this.shadowActive = (new Array<boolean> (width*depth)).fill(false);
         this.shadowPositions = (new Array<Vector> (width*depth)).fill(dummy).map(() => new Vector());
         this.objectPositions = (new Array<GameObject | null> (width*depth*(this.maxHeight + 2))).fill(null);
+
+        this.computeTiles();
+    }
+
+
+    private computeNeighborhood(x : number, z : number) : number[] {
+
+        const out : number[] = (new Array<number> (9)).fill(-1);
+        for (let i : number = -1; i <= 1; ++ i) {
+
+            for (let j : number = -1; j <= 1; ++ j) {
+
+                if (Math.abs(i) == Math.abs(j) || 
+                    x + i >= this.width || x + i < 0 ||
+                    z + j >= this.depth || z + j < 0) {
+
+                    continue;
+                }
+                out[(j + 1)*3 + (i + 1)] = this.heightAt(x + i, z + j);
+            }
+        }
+        return out;
+    }
+
+
+    private computeTiles() : void {
+
+        for (let z : number = 0; z < this.depth; ++ z) {
+
+            for (let x : number = 0; x < this.width; ++ x) {
+
+                const starty : number = this.heightAt(x, z);
+                const neighborhood : number[] = this.computeNeighborhood(x, z);
+
+                const front : number = this.heightAt(x, z + 1);
+                const right : number = this.heightAt(x + 1, z);
+
+                for (let y = starty; y >= 0; -- y) {
+
+                    let flags : number = TileFlags.None;
+                    if (y == starty) {
+
+                        flags |= TileFlags.Floor;
+                    }
+                    if (y > front) {
+
+                        flags |= TileFlags.WallLeft;
+                    }
+                    if (y > right) {
+
+                        flags |= TileFlags.WallRight;
+                    }
+
+                    if (flags == TileFlags.None) {
+
+                        break;
+                    }
+
+                    const t : Tile = new Tile(x, y, z, flags, neighborhood, this);
+                    this.tiles.push(t);
+                    this.depthbuffer.pushObject(t);
+                }
+            }
+        }
     }
 
 
@@ -103,7 +175,7 @@ export class Terrain {
     }
 
 
-    public activeSlimeNearby(x : number, y : number, z : number, minY : number) : boolean {
+    public isSlimeNearby(x : number, y : number, z : number, minY : number) : boolean {
 
         if (this.outOfBounds(x, y, z)) {
 

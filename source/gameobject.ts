@@ -14,8 +14,7 @@ export const enum GameObjectType {
 
     Unknown = 0,
     Slime = 1,
-    DeactivedSlime = 2,
-    Barrel = 3,
+    Boulder = 2,
 };
 
 
@@ -39,8 +38,6 @@ export class GameObject {
     private falling : boolean = false;
     private jumping : boolean = false;
 
-    private changeAnimationFinished : boolean = true;
-
     private _type : GameObjectType;
     private _exists : boolean = true;
 
@@ -49,32 +46,23 @@ export class GameObject {
 
         return this.basePos;
     }
-
-
     public get pos() : Vector {
 
         return this.depthTestPos;
     }
-
-
     public get faceDir() : Direction {
 
         return this._faceDir;
     }
-
-
     public get type() : number {
 
         return this._type;
     }
-
-
     public get exists() : boolean {
 
         return this._exists;
     }
     
-
 
     constructor(x : number, y : number, z : number, type : GameObjectType) {
 
@@ -97,6 +85,14 @@ export class GameObject {
 
         const dx : number = x + dirx;
         const dz : number = z + dirz;
+
+        if (this.type == GameObjectType.Boulder) {
+
+            if (!terrain.isSlimeNearby(x - dirx, y, z - dirz, terrain.heightAt(x, z))) {
+
+                return false;
+            }
+        }
 
         let height : number = terrain.heightAt(dx, dz) + 1;
         if (height <= 0 || height > (this.basePos.y | 0) ||
@@ -166,6 +162,11 @@ export class GameObject {
             return;
         }
 
+        if (this.type != GameObjectType.Slime && this.type != GameObjectType.Boulder) {
+
+            return;
+        }
+
         const right : InputState = prog.keyboard.getActionState(ActionIndex.Right);
         const up : InputState = prog.keyboard.getActionState(ActionIndex.Up);
         const left : InputState = prog.keyboard.getActionState(ActionIndex.Left);
@@ -199,15 +200,6 @@ export class GameObject {
 
         if (dirx != 0 || dirz != 0) {
 
-            if (this.type != GameObjectType.Slime) {
-
-                if (!terrain.activeSlimeNearby(
-                    this.basePos.x - dirx, this.basePos.y, this.basePos.z - dirz, 
-                    terrain.heightAt(this.basePos.x, this.basePos.z))) {
-
-                    return;
-                }
-            }
             this.move(terrain, dirx, dirz);
         }
     }
@@ -227,11 +219,12 @@ export class GameObject {
 
     private updateMovement(terrain : Terrain, prog : ProgramInterface) : void {
 
-        const MOVE_SPEED : number = 1.0/12.0;
+        const BASE_MOVE_SPEED : number = 1.0/12.0;
+        const JUMP_MOVE_SPEED : number = 1.0/16.0;
         const INITIAL_GRAVITY : number = 0.1;
         const MAX_GRAVITY : number = 0.4;
         const GRAVITY_DELTA : number = 0.0075;
-        const JUMP_HEIGHT : number = 0.5;
+        const JUMP_HEIGHT : number = 0.675;
 
         if (!this.moving) {
 
@@ -242,7 +235,8 @@ export class GameObject {
 
         if (!this.falling) {
 
-            this.moveTimer += MOVE_SPEED*prog.step;
+            const moveSpeed : number = this.jumping ? JUMP_MOVE_SPEED : BASE_MOVE_SPEED;
+            this.moveTimer += moveSpeed*prog.step;
             if (this.moveTimer >= 1.0) {
                 
                 this.renderPos.x = this.targetPos.x;
@@ -330,17 +324,9 @@ export class GameObject {
     }
 
 
-    private animate(prog : ProgramInterface) : void {
+    private animateSlime(prog : ProgramInterface) : void {
 
         const FRAME_TIME : number = 15;
-
-        if (this._type == GameObjectType.DeactivedSlime) {
-
-            this.sprite.setFrame(3, 1);
-            this.sprite.flip = Flip.None;
-            return;
-        }
-
         this.determineFlip();
         if (this.targetPos.y < this.basePos.y) {
 
@@ -348,31 +334,6 @@ export class GameObject {
             return;
         }
         this.sprite.animate(1, 0, 1, FRAME_TIME, prog.step);
-    }
-
-
-    private animateStateChanging(prog : ProgramInterface) : void {
-
-        const FRAME_TIME : number = 6.0;
-
-        this.determineFlip();
-        if (this._type == GameObjectType.DeactivedSlime) {
-
-            this.sprite.animate(1, 0, 3, FRAME_TIME, prog.step, false);
-            if (this.sprite.column == 3) {
-
-                this.changeAnimationFinished = true;
-                this.computeFaceProperties();
-            }
-            return;
-        }
-
-        this.sprite.animate(1, 3, 0, FRAME_TIME, prog.step, false);
-        if (this.sprite.column == 0) {
-
-            this.changeAnimationFinished = true;
-            this.computeFaceProperties();
-        }
     }
 
 
@@ -402,11 +363,6 @@ export class GameObject {
 
     private drawSlimeFace(canvas : RenderTarget, bmp : Bitmap, dx : number, dy : number) : void {
 
-        if (!this.changeAnimationFinished) {
-
-            return;
-        }
-
         canvas.drawBitmap(bmp, this.sprite.flip,
              dx + this.faceOffset.x, 
              dy + this.faceOffset.y, 0, 32, 8, 16);
@@ -432,22 +388,25 @@ export class GameObject {
 
     public update(terrain : Terrain, canMove : boolean, prog : ProgramInterface) : void {
                 
-        if (!this.changeAnimationFinished) {
-
-            this.animateStateChanging(prog);
-            return;
-        }
-
         if (canMove) {
         
             this.control(terrain, prog);
         }
-        this.animate(prog);
-        this.computeFaceProperties();
 
+        switch (this.type) {
+
+        case GameObjectType.Slime:
+
+            this.animateSlime(prog);
+            this.computeFaceProperties();
+            break;
+    
+        default:
+            break;
+        }
+        
         this.updateMovement(terrain, prog);
         this.computeDepthTestPos();
-
         this.markShadows(terrain);
         this.checkOverlayingShadow(terrain);
     }
@@ -462,13 +421,13 @@ export class GameObject {
         switch (this.type) {
 
         case GameObjectType.Slime:
-            // fallthrough
-        case GameObjectType.DeactivedSlime:
+
             this.drawSlime(canvas, bmp, dx, dy);
             break;
 
-        case GameObjectType.Barrel:
-            canvas.drawBitmap(bmp, Flip.None, dx, dy - 3, 48, 32, 16, 24);
+        case GameObjectType.Boulder:
+            
+            canvas.drawBitmap(bmp, Flip.None, dx, dy, 48, 16, 16, 16);
             break;
 
         default:
@@ -488,19 +447,13 @@ export class GameObject {
     public changeType(type : GameObjectType, force : boolean = false) : void {
 
         this._type = type;
-        if (force) {
-
-            this.changeAnimationFinished = true;
-            return;
-        }
 
         switch (type) {
 
         case GameObjectType.Slime:
-        case GameObjectType.DeactivedSlime:
+        case GameObjectType.Boulder:
 
             this.sprite.setFrame(type == GameObjectType.Slime ? 3 : 0, 1);
-            this.changeAnimationFinished = false;
             break;
 
         default:
@@ -532,14 +485,11 @@ export class GameObject {
         this.renderPos.makeEqual(this.basePos);
 
         this._faceDir = faceDir;
-        // TODO: Reset sprite
-
         this._type = type;
 
         this.moving = false;
         this.falling = false;
         this.moveTimer = 0.0;
-        this.changeAnimationFinished = true;
         this._exists = true;
     }
 
@@ -548,4 +498,5 @@ export class GameObject {
 
         this._exists = false;
     }
+    
 }
