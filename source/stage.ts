@@ -76,7 +76,7 @@ export class Stage {
 
         for (const o of this.objects) {
 
-            o.forceKill();
+            o.kill(true);
         }
 
         let i : number = 0;
@@ -145,6 +145,33 @@ export class Stage {
     }
 
 
+    private resolveConflicts() : void {
+
+        let conflicts : boolean = false;
+        do {
+
+            conflicts = false;
+            for (let i : number = 0; i < this.objects.length; ++ i) {
+
+                const o : GameObject = this.objects[i];
+                if (!o.exists || !o.isMoving()) {
+
+                    continue;
+                }
+
+                for (let j : number = i + 1; j < this.objects.length; ++ j) {
+                    
+                    if (this.objects[i].resolveConflicts(this.objects[j])) {
+
+                        conflicts = true;
+                    }
+                }
+            }
+        }
+        while (conflicts);
+    }
+
+
     private updateObjects(prog : ProgramInterface) : void {
 
         let anythingMoving : boolean = false;
@@ -153,8 +180,24 @@ export class Stage {
         do {
 
             somethingNewMoved = false;
-            for (const o of this.objects) {
+             for (let i : number = 0; i < this.objects.length; ++ i) {
 
+                const o : GameObject = this.objects[i];
+                if (!o.exists) {
+
+                    continue;
+                }
+
+                // Object-to-object collisions
+                if (!o.isMoving()) {
+
+                    for (let j : number = i + 1; j < this.objects.length; ++ j) {
+                    
+                        o.checkOverlay(this.objects[j]);
+                    }
+                }
+
+                // Update base logic & check movement
                 const wasMoving : boolean = o.isMoving();
                 o.update(this.terrain, canMove, prog);
                 if (!wasMoving && o.isMoving()) {
@@ -166,23 +209,7 @@ export class Stage {
         }
         while (somethingNewMoved);
 
-        // Resolve conflicts (a hacky workaround)
-        let conflicts : boolean = false;
-        do {
-
-            conflicts = false;
-            for (let i : number = 0; i < this.objects.length; ++ i) {
-
-                for (let j : number = i + 1; j < this.objects.length; ++ j) {
-
-                    if (this.objects[i].checkConflicts(this.objects[j])) {
-
-                        conflicts = true;
-                    }
-                }
-            }
-        }
-        while (conflicts);
+        this.resolveConflicts();
         
         if (!anythingMoving && this.wasAnythingMoving) {
 

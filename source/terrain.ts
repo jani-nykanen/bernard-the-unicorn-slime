@@ -201,7 +201,7 @@ export class Terrain {
     public firstSolidTileHeightBelow(x : number, y : number, z : number) : number {
 
         const o : GameObject | null = this.checkObjectBelow(x, y, z);
-        if (o === null) {
+        if (o?.isSolid() !== true) {
 
             return this.heightAt(x, z);
         }

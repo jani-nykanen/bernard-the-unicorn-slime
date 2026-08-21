@@ -8,6 +8,7 @@ import { Terrain } from "./terrain.js";
 import { InputFlag, InputState } from "./keyboard.js";
 import { ActionIndex } from "./keyconfig.js";
 import { Direction } from "./direction.js";
+import { MASTER_PALETTE } from "./palette.js";
 
 
 export const enum GameObjectType {
@@ -15,6 +16,7 @@ export const enum GameObjectType {
     Unknown = 0,
     Slime = 1,
     Boulder = 2,
+    Gem = 3,
 };
 
 
@@ -74,6 +76,17 @@ export class GameObject {
         this.sprite = new Sprite(16, 16);
 
         this._type = type;
+
+        if (type == GameObjectType.Gem) {
+
+            this.initGemMoveTimer();
+        }
+    }
+
+
+    private initGemMoveTimer() : void {
+
+        this.moveTimer = ((this.basePos.x | 0) % 2 == (this.basePos.z | 0) % 2) ? Math.PI : 0.0;
     }
 
 
@@ -95,15 +108,20 @@ export class GameObject {
         }
 
         let height : number = terrain.heightAt(dx, dz) + 1;
-        if (height <= 0 || height > (this.basePos.y | 0) ||
-            terrain.objectAt(dx, y, dz) !== null) {
+        if (height <= 0 || height > (this.basePos.y | 0) ) {
+
+            return false;
+        }
+
+        let objectInFront : GameObject | null = terrain.objectAt(dx, y, dz);
+        if (objectInFront?.isSolid() === true) {
 
             return false;
         }
 
         let dy : number = height;
         const objectBelow : GameObject | null = terrain.checkObjectBelow(dx, y, dz);
-        if (objectBelow !== null) {
+        if (objectBelow?.isSolid() === true) {
 
             dy = objectBelow.logicalPos.y + 1;
         }
@@ -162,7 +180,8 @@ export class GameObject {
             return;
         }
 
-        if (this.type != GameObjectType.Slime && this.type != GameObjectType.Boulder) {
+        if (this.type != GameObjectType.Slime && 
+            this.type != GameObjectType.Boulder) {
 
             return;
         }
@@ -214,6 +233,8 @@ export class GameObject {
         this.basePos.makeEqual(this.targetPos);
 
         terrain.markObject(this.basePos.x | 0, this.basePos.y | 0, this.basePos.z | 0, this);
+
+        this.shadowRef = null;
     }
 
 
@@ -309,13 +330,6 @@ export class GameObject {
     }
 
 
-    private computeFaceProperties() : void {
-
-        this.faceOffset.x = this.sprite.flip == Flip.Horizontal ? 1 : 7;
-        this.faceOffset.y = this.sprite.column == 2 ? -3 : this.sprite.column - 1;
-    }
-
-
     private determineFlip() : void {
 
         this.sprite.flip = 
@@ -327,6 +341,10 @@ export class GameObject {
     private animateSlime(prog : ProgramInterface) : void {
 
         const FRAME_TIME : number = 15;
+
+        this.faceOffset.x = this.sprite.flip == Flip.Horizontal ? 1 : 7;
+        this.faceOffset.y = this.sprite.column == 2 ? -3 : this.sprite.column - 1;
+
         this.determineFlip();
         if (this.targetPos.y < this.basePos.y) {
 
@@ -334,6 +352,16 @@ export class GameObject {
             return;
         }
         this.sprite.animate(1, 0, 1, FRAME_TIME, prog.step);
+    }
+
+
+    private animateGem(prog : ProgramInterface) : void {
+
+        const FRAME_TIME : number = 10;
+        const WAVE_SPEED : number = Math.PI*2.0/75.0;
+
+        this.sprite.animate(3, 0, 3, FRAME_TIME, prog.step);
+        this.moveTimer = (this.moveTimer + WAVE_SPEED*prog.step) % (Math.PI*2.0);
     }
 
 
@@ -386,6 +414,38 @@ export class GameObject {
     }
 
 
+    private drawGem(canvas : RenderTarget, bmp : Bitmap, dx : number, dy : number) : void {
+
+        const AMPLITUDE : number = 1.0;
+        const BASE_YOFF : number = 2.0;
+
+        let sx : number = this.sprite.column;
+        if (sx == 2) {
+
+            sx = 0;
+        }
+        else if (sx == 3) {
+
+            sx = 2;
+        }
+        const flip : Flip = this.sprite.column == 2 ? Flip.Horizontal : Flip.None;
+
+        // Shadow
+        canvas.drawBitmap(bmp, flip, dx, dy + 10, 8, 40, 16, 8);
+
+        const offset : number = BASE_YOFF + Math.round(Math.sin(this.moveTimer)*AMPLITUDE);
+        dy -= offset;
+
+        // Color correction
+        const colorCorrectionIndex : number = sx == 1 ? 1 : 3;
+        canvas.setDrawColor(...MASTER_PALETTE[colorCorrectionIndex]);
+        canvas.fillRect(dx + 2, dy + 7, 12, 2);
+
+        // Gem body
+        canvas.drawBitmap(bmp, flip, dx, dy, sx*16, 48, 16, 16);
+    }
+
+
     public update(terrain : Terrain, canMove : boolean, prog : ProgramInterface) : void {
                 
         if (canMove) {
@@ -398,7 +458,11 @@ export class GameObject {
         case GameObjectType.Slime:
 
             this.animateSlime(prog);
-            this.computeFaceProperties();
+            break;
+
+        case GameObjectType.Gem:
+
+            this.animateGem(prog);
             break;
     
         default:
@@ -430,6 +494,11 @@ export class GameObject {
             canvas.drawBitmap(bmp, Flip.None, dx, dy, 48, 16, 16, 16);
             break;
 
+        case GameObjectType.Gem:
+
+            this.drawGem(canvas, bmp, dx, dy);
+            break;
+
         default:
             break;
         }
@@ -451,9 +520,13 @@ export class GameObject {
         switch (type) {
 
         case GameObjectType.Slime:
-        case GameObjectType.Boulder:
 
-            this.sprite.setFrame(type == GameObjectType.Slime ? 3 : 0, 1);
+            this.sprite.setFrame(0, 1);
+            break;
+
+        case GameObjectType.Gem:
+
+            this.sprite.setFrame(0, 0);
             break;
 
         default:
@@ -462,7 +535,7 @@ export class GameObject {
     }
 
 
-    public checkConflicts(o : GameObject) : boolean {
+    public resolveConflicts(o : GameObject) : boolean {
 
         if (!this.moving || !o.moving || !this.exists || !o.exists) {
 
@@ -474,6 +547,24 @@ export class GameObject {
             ++ this.targetPos.y;
             return true;
         }
+        return false;
+    }
+
+
+    public checkOverlay(o : GameObject) : boolean {
+
+        if (!this.exists || !o.exists || !this.targetPos.equals(o.targetPos)) {
+
+            return false;
+        }
+
+        // Collect gem
+        if (this.type == GameObjectType.Slime && o.type == GameObjectType.Gem) {
+
+            o.kill(false);
+            return false;
+        }
+
         return false;
     }
 
@@ -491,12 +582,24 @@ export class GameObject {
         this.falling = false;
         this.moveTimer = 0.0;
         this._exists = true;
+
+        if (type == GameObjectType.Gem) {
+
+            this.initGemMoveTimer();
+        }
     }
 
 
-    public forceKill() : void {
+    public kill(force : boolean = false) : void {
 
         this._exists = false;
+    }
+
+
+    public isSolid() : boolean {
+
+        // This'll do for now...
+        return this.type < GameObjectType.Gem;
     }
     
 }
