@@ -15,6 +15,7 @@ window.onload = () : void => (new Program(160, 144, 60,
         prog.addScene("game", new Game(), true);
 
         prog.assets.loadBitmap(BitmapIndex.BaseRaw, "base.png");
+        prog.assets.loadBitmap(BitmapIndex.FontRaw, "font.png");
     },
     // onLoad
     (prog : ProgramInterface) : void => {

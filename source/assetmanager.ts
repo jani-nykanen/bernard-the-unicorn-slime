@@ -97,6 +97,12 @@ export class AssetManager {
     }
 
 
+    public addBitmap(id : number, bmp : Bitmap) : void {
+
+        this.bitmaps.set(id, bmp);
+    }
+
+
     public hasLoaded() : boolean {
 
         return this.loadedCount >= this.totalCount;

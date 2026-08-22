@@ -11,6 +11,14 @@ export const enum Flip {
 };
 
 
+export const enum Align {
+
+    Left = 0,
+    Right = 1,
+    Center = 2,
+};
+
+
 export class RenderTarget {
 
 
@@ -37,17 +45,17 @@ export class RenderTarget {
     constructor(width : number, height : number, div : HTMLDivElement | null = null) {
 
         this.canvas = document.createElement("canvas")!;
-        this.canvas.setAttribute("style", 
-            "position: absolute;" +
-            "z-index: -1;" +
-            "image-rendering: optimizeSpeed;" + 
-            "image-rendering: pixelated;" +
-            "image-rendering: -moz-crisp-edges;");
-
         this.canvas.width = width;
         this.canvas.height = height;
 
         if (div !== null) {
+
+            this.canvas.setAttribute("style", 
+                "position: absolute;" +
+                "z-index: -1;" +
+                "image-rendering: optimizeSpeed;" + 
+                "image-rendering: pixelated;" +
+                "image-rendering: -moz-crisp-edges;");
 
             div.appendChild(this.canvas);
             document.body.appendChild(div);
@@ -83,6 +91,21 @@ export class RenderTarget {
         y = (y + this.translation.y) | 0;
 
         this.ctx.fillRect(x, y, w | 0, h | 0);
+    }
+
+
+    public fillCircle(x : number, y : number, r : number) : void {
+
+        x = (x + this.translation.x) | 0;
+        y = (y + this.translation.y) | 0;
+
+        for (let dy : number = y - r; dy < y + r; ++ dy) {
+
+            const t : number = (dy - y)/r;
+            const dw : number = Math.round(Math.sqrt(Math.max(0, 1 - t*t))*r*2.0);
+            const dx : number = (x - dw/2.0) | 0;
+            this.ctx.fillRect(dx, dy, dw, 1);
+        }
     }
 
 
@@ -124,5 +147,54 @@ export class RenderTarget {
 
             ctx.restore();
         }
+    }
+
+
+    public drawText(font : Bitmap, text : string, 
+        dx : number, dy : number, align : Align = Align.Left,
+        xoff : number = 0, yoff : number = 0) : void {
+
+        const LINE_SHIFT : number = 2;
+
+        const cw : number = (font.width/16) | 0;
+        const ch : number = cw;
+
+        dx = (dx + this.translation.x) | 0;
+        dy = (dy + this.translation.y) | 0;
+
+        const len : number = (text.length)*(cw + xoff);
+        if (align == Align.Center) {
+
+            dx -= (len/2.0) | 0;
+        }
+        else if (align == Align.Right) {
+            
+            dx -= len | 0;
+        }
+        
+        let x : number = dx;
+        let y : number = dy;
+
+        for (let i : number = 0; i < text.length; ++ i) {
+
+            const chr : number = text.charCodeAt(i);
+            if (chr == '\n'.charCodeAt(0)) {
+
+                x = dx;
+                y += ch + yoff;
+                continue;
+            }
+            this.ctx.drawImage(font, 
+                (chr % 16)*cw, 
+                (((chr/16) | 0) - LINE_SHIFT)*ch, 
+                cw, ch, x, y, cw, ch);
+            x += cw + xoff;
+        }
+    }
+
+
+    public toBitmap() : Bitmap {
+
+        return this.canvas;
     }
 }

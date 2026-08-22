@@ -3,7 +3,7 @@ import { AssetManager } from "./assetmanager.js";
 import { Bitmap } from "./bitmap.js";
 import { MASTER_PALETTE } from "./palette.js";
 import { ProgramInterface } from "./program.js";
-import { Flip, RenderTarget } from "./rendertarget.js";
+import { Align, Flip, RenderTarget } from "./rendertarget.js";
 import { Scene, SceneChangeParameter } from "./scene.js";
 import { Stage } from "./stage.js";
 
@@ -29,7 +29,7 @@ const STAR_POSITIONS : number[][][] =
 [
     [[1,1], [2,6], [7, 7], [12,3], [15, 8]],
     [[5, 4], [4, 10]],
-    [[8, 1], [18, 7]]
+    [[8, 2], [18, 7]]
 ]
 
 
@@ -51,9 +51,13 @@ export class Game implements Scene {
         const CLOUD_Y : number = 88;
 
         const bmpBase : Bitmap = assets.getBitmap(BitmapIndex.Base)!;
+        const bmpMoon : Bitmap = assets.getBitmap(BitmapIndex.Moon)!;
 
         canvas.setDrawColor(...MASTER_PALETTE[0]);
         canvas.clear();
+
+        // Moon
+        canvas.drawBitmap(bmpMoon, Flip.None, canvas.width - 48, 8);
 
         // Stars
         for (let i : number = 0; i < 4; ++ i) {
@@ -100,5 +104,9 @@ export class Game implements Scene {
 
         this.drawBackground(canvas, assets);
         this.stage?.draw(canvas, assets);
+
+        // TODO: Think a better place for this
+        const bmpFontWhite : Bitmap = assets.getBitmap(BitmapIndex.FontWhite)!;
+        canvas.drawText(bmpFontWhite, "LEVEL 1", canvas.width/2, 1, Align.Center);
     }
 }
