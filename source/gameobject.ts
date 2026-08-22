@@ -9,6 +9,7 @@ import { InputFlag, InputState } from "./keyboard.js";
 import { ActionIndex } from "./keyconfig.js";
 import { Direction } from "./direction.js";
 import { MASTER_PALETTE } from "./palette.js";
+import { nextParticle, Particle, ParticleType } from "./particle.js";
 
 
 export const enum GameObjectType {
@@ -43,6 +44,8 @@ export class GameObject {
     private _type : GameObjectType;
     private _exists : boolean = true;
 
+    private readonly particles : Particle[];
+
 
     public get logicalPos() : Vector {
 
@@ -66,7 +69,8 @@ export class GameObject {
     }
     
 
-    constructor(x : number, y : number, z : number, type : GameObjectType) {
+    constructor(x : number, y : number, z : number, 
+        type : GameObjectType, particles : Particle[]) {
 
         this.basePos = new Vector(x, y, z);
         this.renderPos = this.basePos.clone();
@@ -81,6 +85,8 @@ export class GameObject {
 
             this.initGemMoveTimer();
         }
+
+        this.particles = particles;
     }
 
 
@@ -330,14 +336,6 @@ export class GameObject {
     }
 
 
-    private determineFlip() : void {
-
-        this.sprite.flip = 
-            this._faceDir == Direction.Left || this._faceDir == Direction.Down ? 
-                Flip.Horizontal : Flip.None;
-    }
-
-
     private animateSlime(prog : ProgramInterface) : void {
 
         const FRAME_TIME : number = 15;
@@ -345,7 +343,10 @@ export class GameObject {
         this.faceOffset.x = this.sprite.flip == Flip.Horizontal ? 1 : 7;
         this.faceOffset.y = this.sprite.column == 2 ? -3 : this.sprite.column - 1;
 
-        this.determineFlip();
+        this.sprite.flip = 
+            this._faceDir == Direction.Left || this._faceDir == Direction.Down ? 
+                Flip.Horizontal : Flip.None;
+
         if (this.targetPos.y < this.basePos.y) {
 
             this.sprite.setFrame(this.falling ? 0 : 2, 1);
@@ -362,6 +363,30 @@ export class GameObject {
 
         this.sprite.animate(3, 0, 3, FRAME_TIME, prog.step);
         this.moveTimer = (this.moveTimer + WAVE_SPEED*prog.step) % (Math.PI*2.0);
+    }
+
+
+    private spawnGemParticles() : void {
+
+        const COUNT : number = 4;
+        const LAUNCH_SPEED : number = 2.0;
+
+        const angleStep : number = Math.PI*2.0/4.0;
+
+        const v : Vector = isometricProjection(this.renderPos);
+        const dx : number = v.x*12;
+        const dy : number = v.y*12 + 7;
+
+        for (let i : number = 0; i < COUNT; ++ i) {
+
+            const angle : number = angleStep/2.0 + angleStep*i;
+
+            const speedx : number = Math.cos(angle)*LAUNCH_SPEED;
+            const speedy : number = Math.sin(angle)*LAUNCH_SPEED;
+
+            nextParticle(this.particles).spawn(ParticleType.Star,
+                dx, dy, speedx, speedy);
+        }
     }
 
 
@@ -561,6 +586,7 @@ export class GameObject {
         // Collect gem
         if (this.type == GameObjectType.Slime && o.type == GameObjectType.Gem) {
 
+            this.spawnGemParticles();
             o.kill(false);
             return false;
         }

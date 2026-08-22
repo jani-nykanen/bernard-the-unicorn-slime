@@ -10,6 +10,7 @@ import { Terrain } from "./terrain.js";
 import { ActionIndex } from "./keyconfig.js";
 import { InputFlag } from "./keyboard.js";
 import { ObjectInfo, PuzzleState, StateBuffer } from "./statebuffer.js";
+import { Particle } from "./particle.js";
 
 
 export class Stage {
@@ -23,6 +24,7 @@ export class Stage {
     private activeState : PuzzleState;
     private initialState : PuzzleState;
     private info : ObjectInfo = new ObjectInfo();
+    private particles : Particle[] = [];
 
     private wasAnythingMoving : boolean = false;
 
@@ -134,7 +136,7 @@ export class Stage {
                 // Moving objects
                 if (objectID >= MOVING_OBJECT_FIRST && objectID <= MOVING_OBJECT_LAST) {
                 
-                    const o : GameObject = new GameObject(x, y, z, objectID);
+                    const o : GameObject = new GameObject(x, y, z, objectID, this.particles);
 
                     this.objects.push(o);
                     this.depthBuffer.pushObject(o);
@@ -251,6 +253,11 @@ export class Stage {
             
             this.checkKeyboardActions(prog);
         }
+
+        for (const p of this.particles) {
+
+            p.update(prog);
+        }
     }
 
 
@@ -265,6 +272,11 @@ export class Stage {
 
         this.depthBuffer.sort();
         this.depthBuffer.draw(canvas, bmpBase);
+
+        for (const p of this.particles) {
+
+            p.draw(canvas, bmpBase);
+        }
 
         canvas.moveTo();
     }

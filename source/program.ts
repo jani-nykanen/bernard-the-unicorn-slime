@@ -10,6 +10,9 @@ export interface ProgramInterface {
     get assets() : AssetManager;
     get step() : number;
 
+    get screenWidth() : number;
+    get screenHeight() : number;
+
     addScene(name : string, scene : Scene, makeActive? : boolean) : void;
     changeScene(name : string) : boolean;
 }
@@ -38,11 +41,20 @@ export class Program implements ProgramInterface {
     public readonly keyboard : Keyboard;
     public readonly assets : AssetManager;
 
+    
     public get step() : number {
 
         return this._step;
     }
-    
+    public get screenWidth() : number {
+
+        return this.renderer.canvas.width;
+    }
+    public get screenHeight() : number {
+
+        return this.renderer.canvas.height;
+    }
+
 
     constructor(canvasWidth : number, canvasHeight : number, framerate : number,
         onInit : OnInitCallback, onLoad : OnLoadCallback) {
