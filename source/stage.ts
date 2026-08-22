@@ -27,10 +27,17 @@ export class Stage {
     private particles : Particle[] = [];
 
     private wasAnythingMoving : boolean = false;
+    private _cleared : boolean = false;
 
     public readonly width : number;
     public readonly height : number;
     public readonly depth : number;
+
+
+    public get cleared() : boolean {
+
+        return this._cleared;
+    }
 
 
     constructor(heightData : number[], objectData : number[], width : number, depth : number) {
@@ -64,6 +71,12 @@ export class Stage {
         this.activeState.flush();
         for (const o of this.objects) {
 
+
+            // NOTE: Nonexistent objects are also pushed to the buffer,
+            // because... well, I tried to change this but things went
+            // wrong.
+            // TODO: Perhaps worth fixing, then?
+
             this.info.pos.makeEqual(o.logicalPos);
             this.info.type = o.type;
             this.info.active = o.exists;
@@ -94,26 +107,6 @@ export class Stage {
             const p : Vector = o.logicalPos;
             this.terrain.markObject(p.x, p.y, p.z, o);
         }
-    }
-
-
-    private computeNeighbors(x : number, z : number) : number[] {
-
-        const out : number[] = (new Array<number> (9)).fill(-1);
-        for (let i : number = -1; i <= 1; ++ i) {
-
-            for (let j : number = -1; j <= 1; ++ j) {
-
-                if (Math.abs(i) == Math.abs(j) || 
-                    x + i >= this.width || x + i < 0 ||
-                    z + j >= this.depth || z + j < 0) {
-
-                    continue;
-                }
-                out[(j + 1)*3 + (i + 1)] = this.terrain.heightAt(x + i, z + j);
-            }
-        }
-        return out;
     }
 
 
@@ -176,6 +169,7 @@ export class Stage {
 
     private updateObjects(prog : ProgramInterface) : void {
 
+        this._cleared = true;
         let anythingMoving : boolean = false;
         let somethingNewMoved : boolean = false;
         const canMove : boolean = !this.wasAnythingMoving;
@@ -188,6 +182,11 @@ export class Stage {
                 if (!o.exists) {
 
                     continue;
+                }
+
+                if (this._cleared && o.type == GameObjectType.Gem) {
+
+                    this._cleared = false;
                 }
 
                 // Object-to-object collisions
@@ -231,27 +230,25 @@ export class Stage {
 
         if (prog.keyboard.getActionState(ActionIndex.Undo).flag == InputFlag.Pressed) {
 
-            if (this.stateBuffer.undo(this.activeState)) {
-                
-                this.recoverState();
-            }
+            this.undo();
         }
         else if (prog.keyboard.getActionState(ActionIndex.Reset).flag == InputFlag.Pressed) {
 
-            this.stateBuffer.pushState(this.activeState);
-            this.activeState.makeEqual(this.initialState);
-            this.recoverState();
+            this.reset();
         }
     }
 
 
     public update(prog : ProgramInterface) : void {
 
-        this.terrain.flush();
-        this.updateObjects(prog);
-        if (!this.wasAnythingMoving) {
-            
-            this.checkKeyboardActions(prog);
+        if (!this._cleared) {
+
+            this.terrain.flush();
+            this.updateObjects(prog);
+            if (!this.wasAnythingMoving) {
+                
+                this.checkKeyboardActions(prog);
+            }
         }
 
         for (const p of this.particles) {
@@ -268,7 +265,7 @@ export class Stage {
         const left : number = canvas.width/2;
         const top : number = canvas.height/2 + this.height*4;
 
-        canvas.moveTo(left, top);
+        canvas.move(left, top);
 
         this.depthBuffer.sort();
         this.depthBuffer.draw(canvas, bmpBase);
@@ -278,6 +275,23 @@ export class Stage {
             p.draw(canvas, bmpBase);
         }
 
-        canvas.moveTo();
+        canvas.move(-left, -top);
+    }
+
+
+    public undo() : void {
+
+        if (this.stateBuffer.undo(this.activeState)) {
+                
+            this.recoverState();
+        }
+    }
+
+
+    public reset() : void {
+
+        this.stateBuffer.pushState(this.activeState);
+        this.activeState.makeEqual(this.initialState);
+        this.recoverState();
     }
 }

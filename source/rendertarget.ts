@@ -79,6 +79,13 @@ export class RenderTarget {
     }
 
 
+    public move(x : number, y : number) : void {
+
+        this.translation.x += x;
+        this.translation.y += y;
+    }
+
+
     public clear() : void {
 
         this.ctx.fillRect(0, 0, this.width, this.height);
@@ -94,12 +101,13 @@ export class RenderTarget {
     }
 
 
-    public fillCircle(x : number, y : number, r : number) : void {
+    public fillCircle(x : number, y : number, r : number, height : number = r*2) : void {
 
         x = (x + this.translation.x) | 0;
         y = (y + this.translation.y) | 0;
 
-        for (let dy : number = y - r; dy < y + r; ++ dy) {
+        const start : number = y - r;
+        for (let dy : number = start; dy < start + Math.min(height, r*2); ++ dy) {
 
             const t : number = (dy - y)/r;
             const dw : number = Math.round(Math.sqrt(Math.max(0, 1 - t*t))*r*2.0);

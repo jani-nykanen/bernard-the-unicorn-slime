@@ -9,7 +9,7 @@ import { BitmapIndex } from "./assetindex.js";
 import { MASTER_PALETTE } from "./palette.js";
 
 
-export type MenuButtonCallback = () => boolean;
+export type MenuButtonCallback = (prog? : ProgramInterface) => boolean;
 
 
 export class MenuButton {
@@ -33,9 +33,9 @@ export class MenuButton {
     }
 
 
-    public evaluate() : boolean {
+    public evaluate(prog : ProgramInterface) : boolean {
 
-        return this.callback();
+        return this.callback(prog);
     }
 
 
@@ -108,9 +108,9 @@ export class Menu {
 
             -- this.cursorPos;
         }
-        if (prog.keyboard.getActionState(ActionIndex.Up).flag  == InputFlag.Pressed) {
+        else if (prog.keyboard.getActionState(ActionIndex.Down).flag  == InputFlag.Pressed) {
 
-            -- this.cursorPos;
+            ++ this.cursorPos;
         }
         if (oldPos != this.cursorPos) {
 
@@ -119,7 +119,7 @@ export class Menu {
 
         if (prog.keyboard.getActionState(ActionIndex.Select).flag == InputFlag.Pressed) {
 
-            if (this.buttons[this.cursorPos].evaluate()) {
+            if (this.buttons[this.cursorPos].evaluate(prog)) {
 
                 this.active = false;
             }
@@ -131,14 +131,16 @@ export class Menu {
         xoff : number = 0, yoff : number = 0) : void {
 
         const FONT_YOFF : number = 12;
+        const PADDING_X : number = 3;
+        const PADDING_Y : number = 3;
 
         if (!this.active) {
 
             return;
         }
 
-        const dw : number = this.width*8;
-        const dh : number = this.height*FONT_YOFF;
+        const dw : number = this.width*8 + PADDING_X*2;
+        const dh : number = this.height*FONT_YOFF + PADDING_Y*2;
 
         const dx : number = canvas.width/2 - dw/2;
         const dy : number = canvas.height/2 - dh/2;
@@ -150,7 +152,7 @@ export class Menu {
         canvas.setDrawColor(...MASTER_PALETTE[3]);
         canvas.fillRect(dx - 2, dy - 2, dw + 4, dh + 4);
         canvas.setDrawColor(...MASTER_PALETTE[1]);
-        canvas.fillRect(dx - 1, dy - 1, dw + 2, dh + 24);
+        canvas.fillRect(dx - 1, dy - 1, dw + 2, dh + 2);
         canvas.setDrawColor(...MASTER_PALETTE[0]);
         canvas.fillRect(dx, dy, dw, dh);
 
@@ -162,12 +164,12 @@ export class Menu {
             const b : MenuButton = this.buttons[i];
             const font : Bitmap = isCurrent ? bmpFontBlack : bmpFontWhite;
 
-            const x : number = dx + xoff + 1;
-            const y : number = dy + yoff + 1 + i*FONT_YOFF;
+            const x : number = dx + xoff + PADDING_X;
+            const y : number = dy + yoff + PADDING_Y + i*FONT_YOFF + 2;
 
             if (isCurrent) {
 
-                canvas.fillRect(x - 1, y - 1, dw - 2, FONT_YOFF + 2);
+                canvas.fillRect(x - 1, y - 2, dw + 2 - PADDING_X*2, 11);
             }
             canvas.drawText(font, b.text, x, y, Align.Left);
         }

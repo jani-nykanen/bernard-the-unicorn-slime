@@ -6,6 +6,10 @@ import { ProgramInterface } from "./program.js";
 import { Align, Flip, RenderTarget } from "./rendertarget.js";
 import { Scene, SceneChangeParameter } from "./scene.js";
 import { Stage } from "./stage.js";
+import { Menu } from "./menu.js";
+import { createPauseMenu } from "./pausemenu.js";
+import { ActionIndex } from "./keyconfig.js";
+import { InputFlag } from "./keyboard.js";
 
 
 const TEST_HEIGHT_MAP : number[] = [
@@ -27,8 +31,8 @@ const TEST_OBJECT_MAP : number[] = [
 
 const STAR_POSITIONS : number[][][] = 
 [
-    [[1,1], [2,6], [7, 7], [12,3], [15, 8]],
-    [[5, 4], [4, 10]],
+    [[1,1], [2,6], [7, 7], [12,3], [14, 8]],
+    [[5, 4], [4, 10], [16, 9]],
     [[8, 2], [18, 7]]
 ]
 
@@ -38,10 +42,53 @@ export class Game implements Scene {
 
     private stage : Stage | null = null;
 
+    private pauseMenu : Menu | null = null;
+
+    private cameraPos : number = 0;
+    private cutsceneStarted : boolean = false;
+    private cutscenePhase : number = 0;
+    private cutsceneTimer : number = 0;
+
 
     constructor() {
-
+        
         // ...
+    }
+
+
+    private updateCutscene(prog : ProgramInterface) : void {
+
+        const CAMERA_MOVE_SPEED : number = 2.0;
+        const TEXT_FLICKER_TIME : number = 90;
+
+        const camTarget : number = -prog.screenHeight;
+
+        switch (this.cutscenePhase) {
+
+        case 0:
+
+            this.cutsceneTimer = this.cameraPos/camTarget;
+            this.cameraPos -= CAMERA_MOVE_SPEED*prog.step;
+            if (this.cameraPos < camTarget) {
+
+                this.cameraPos = camTarget;
+                this.cutscenePhase = 1;
+                this.cutsceneTimer = 0.0;
+            }
+            break;
+
+        case 1:
+
+            this.cutsceneTimer += prog.step;
+            if (this.cutsceneTimer >= TEXT_FLICKER_TIME) {
+
+                this.cutscenePhase = 2;
+            }
+            break;
+
+        default:
+            break;
+        }
     }
 
 
@@ -76,6 +123,19 @@ export class Game implements Scene {
             }
         }
 
+        // Rainbow
+        if (this.cutsceneStarted) {
+
+            const bmpRainbow : Bitmap = assets.getBitmap(BitmapIndex.Rainbow)!;
+
+            const t : number = this.cutscenePhase == 0 ? this.cutsceneTimer : 1.0;
+            const dw : number = Math.round(bmpRainbow.width*t);
+
+            canvas.drawBitmap(bmpRainbow, Flip.None, canvas.width/2 - bmpRainbow.width/2, CLOUD_Y - 40,
+                0, 0, dw, bmpRainbow.height);
+        }
+        
+
         // Clouds
         const cloudCount : number = Math.ceil(canvas.width/CLOUD_WIDTH);
         for (let i : number = 0; i < cloudCount + 1; ++ i) {
@@ -88,25 +148,87 @@ export class Game implements Scene {
     }
 
 
+    private drawHeaderText(canvas : RenderTarget, assets : AssetManager) : void {
+
+        const CUTSCENE_TEXT : string = "RAINBOW CREATED!";
+
+        const bmpFontWhite : Bitmap = assets.getBitmap(BitmapIndex.FontWhite)!;
+        if (!this.cutsceneStarted) {
+
+            canvas.drawText(bmpFontWhite, "LEVEL 1", canvas.width/2, 1, Align.Center);
+            return;
+        }
+
+        const textLength : number = CUTSCENE_TEXT.length;
+        const dx : number = canvas.width/2 - textLength*4;
+
+        if (this.cutscenePhase == 0) {
+
+            const text : string = CUTSCENE_TEXT.substring(0, Math.round(this.cutsceneTimer*textLength));
+            canvas.drawText(bmpFontWhite, text, dx, 1);
+            return;
+        }
+
+        if (this.cutscenePhase == 1 && Math.floor(this.cutsceneTimer/10) % 2 == 0) {
+
+            return;
+        }
+        canvas.drawText(bmpFontWhite, CUTSCENE_TEXT, dx, 1);
+    }
+
+
     public init(param : SceneChangeParameter, prog : ProgramInterface) : void {
         
+        this.cutsceneStarted = false;
+
         this.stage = new Stage(TEST_HEIGHT_MAP, TEST_OBJECT_MAP, 4, 4);
+        this.pauseMenu = createPauseMenu(this.stage, () => {
+
+            // TODO: Quit
+        });
     }
 
 
     public update(prog : ProgramInterface) : void {
         
+        if (this.cutsceneStarted) {
+
+            this.stage?.update(prog);
+            this.updateCutscene(prog);
+            return;
+        }
+
+        if (this.pauseMenu!.isActive()) {
+
+            this.pauseMenu!.update(prog);
+            return;
+        }
+        if (prog.keyboard.getActionState(ActionIndex.Pause).flag == InputFlag.Pressed) {
+
+            this.pauseMenu!.activate(0);
+            return;
+        }
+
         this.stage?.update(prog);
+        if (this.stage?.cleared === true) {
+
+            this.cutsceneStarted = true;
+            this.cutscenePhase = 0;
+        }
     }
 
 
     public redraw(canvas : RenderTarget, assets : AssetManager) : void {
 
         this.drawBackground(canvas, assets);
+        canvas.moveTo(0, -this.cameraPos);
         this.stage?.draw(canvas, assets);
 
-        // TODO: Think a better place for this
-        const bmpFontWhite : Bitmap = assets.getBitmap(BitmapIndex.FontWhite)!;
-        canvas.drawText(bmpFontWhite, "LEVEL 1", canvas.width/2, 1, Align.Center);
+        canvas.moveTo();
+        if (this.pauseMenu!.isActive()) {
+
+            this.pauseMenu!.draw(canvas, assets);
+        }
+        this.drawHeaderText(canvas, assets);
     }
 }
