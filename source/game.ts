@@ -25,6 +25,14 @@ const TEST_OBJECT_MAP : number[] = [
 ];
 
 
+const STAR_POSITIONS : number[][][] = 
+[
+    [[1,1], [2,6], [7, 7], [12,3], [15, 8]],
+    [[5, 4], [4, 10]],
+    [[8, 1], [18, 7]]
+]
+
+
 export class Game implements Scene {
     
 
@@ -34,6 +42,45 @@ export class Game implements Scene {
     constructor() {
 
         // ...
+    }
+
+
+    private drawBackground(canvas : RenderTarget, assets : AssetManager) : void {
+
+        const CLOUD_WIDTH : number = 64;
+        const CLOUD_Y : number = 88;
+
+        const bmpBase : Bitmap = assets.getBitmap(BitmapIndex.Base)!;
+
+        canvas.setDrawColor(...MASTER_PALETTE[0]);
+        canvas.clear();
+
+        // Stars
+        for (let i : number = 0; i < 4; ++ i) {
+
+            const table : number[][] = STAR_POSITIONS[i] ?? [];
+
+            const sx : number = 48 + (i % 2)*8;
+            const sy : number = 48 + ((i/2) | 0)*8;
+
+            for (const p of table) {
+
+                const dx : number = p[0]*8;
+                const dy : number = p[1]*8;
+
+                canvas.drawBitmap(bmpBase, Flip.None, dx, dy, sx, sy, 8, 8);
+            }
+        }
+
+        // Clouds
+        const cloudCount : number = Math.ceil(canvas.width/CLOUD_WIDTH);
+        for (let i : number = 0; i < cloudCount + 1; ++ i) {
+
+            const dx : number = i*CLOUD_WIDTH;
+            canvas.drawBitmap(bmpBase, Flip.None, dx, CLOUD_Y, 0, 64, CLOUD_WIDTH, 16);
+        }
+        canvas.setDrawColor(...MASTER_PALETTE[3]);
+        canvas.fillRect(0, CLOUD_Y + 16, canvas.width, canvas.height - (CLOUD_Y + 16));
     }
 
 
@@ -50,10 +97,8 @@ export class Game implements Scene {
 
 
     public redraw(canvas : RenderTarget, assets : AssetManager) : void {
-        
-        canvas.setDrawColor(...MASTER_PALETTE[3]);
-        canvas.clear();
 
+        this.drawBackground(canvas, assets);
         this.stage?.draw(canvas, assets);
     }
 }

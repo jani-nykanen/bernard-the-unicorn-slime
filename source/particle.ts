@@ -42,7 +42,7 @@ export class Particle {
 
         const MAX_GRAVITY : number = 4.0;
         const GRAVITY_STEP : number = 0.1; 
-        const STAR_FRAME_TIME : number = 8;
+        const STAR_FRAME_TIME : number = 6;
 
         if (!this._exists) {
 
