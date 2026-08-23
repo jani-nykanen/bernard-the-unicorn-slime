@@ -40,10 +40,17 @@ export class Stage {
     }
 
 
-    constructor(heightData : number[], objectData : number[], width : number, depth : number) {
+    constructor(levelData : string, width : number, depth : number) {
 
         const MAX_STATE_COUNT : number = 32;
         const STATE_BUFFER_MAX_OBJECT_COUNT : number = 32;
+
+        this.width = parseInt(levelData[0], 32);
+        this.height = parseInt(levelData[1], 32);
+        
+        const len : number = this.width*this.height;
+        const heightData : number[] = levelData.substring(2, 2 + len).split("").map((c : string) => parseInt(c, 32));
+        const objectData : number[] = levelData.substring(2 + len).split("").map((c : string) => parseInt(c, 32));
 
         this.depthBuffer = new DepthObjectBuffer();
         this.terrain = new Terrain(heightData, width, depth, this.depthBuffer);
@@ -160,11 +167,33 @@ export class Stage {
 
                         conflicts = true;
                     }
+                    // TODO: Verify if there is a reason to check also a conflict between
+                    // index j and i (resolveConflicts is not symmetric!!!)
                 }
             }
         }
         while (conflicts);
     }
+
+
+    private checkObjectOverlay(prog : ProgramInterface) : void {
+
+        for (let i : number = 0; i < this.objects.length; ++ i) {
+
+            const o : GameObject = this.objects[i];
+            if (!o.exists) {
+
+                continue;
+            }
+
+            for (let j : number = i + 1; j < this.objects.length; ++ j) {
+                
+                const o2 : GameObject = this.objects[j];
+                o.checkOverlay(o2, prog);
+                o2.checkOverlay(o, prog);
+            }
+        }
+    } 
 
 
     private updateObjects(prog : ProgramInterface) : void {
@@ -176,7 +205,7 @@ export class Stage {
         do {
 
             somethingNewMoved = false;
-             for (let i : number = 0; i < this.objects.length; ++ i) {
+            for (let i : number = 0; i < this.objects.length; ++ i) {
 
                 const o : GameObject = this.objects[i];
                 if (!o.exists) {
@@ -187,15 +216,6 @@ export class Stage {
                 if (this._cleared && o.type == GameObjectType.Gem) {
 
                     this._cleared = false;
-                }
-
-                // Object-to-object collisions
-                if (!o.isMoving()) {
-
-                    for (let j : number = i + 1; j < this.objects.length; ++ j) {
-                    
-                        o.checkOverlay(this.objects[j], prog);
-                    }
                 }
 
                 // Update base logic & check movement
@@ -214,6 +234,7 @@ export class Stage {
         
         if (!anythingMoving && this.wasAnythingMoving) {
 
+            this.checkObjectOverlay(prog);
             this.stateBuffer.pushState(this.activeState);
             this.refreshState();
         }

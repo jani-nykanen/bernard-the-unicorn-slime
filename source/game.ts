@@ -10,23 +10,7 @@ import { Menu } from "./menu.js";
 import { createPauseMenu } from "./pausemenu.js";
 import { ActionIndex } from "./keyconfig.js";
 import { InputFlag } from "./keyboard.js";
-
-
-const TEST_HEIGHT_MAP : number[] = [
-
-    3, 4, 3, 2,
-    2, 3, 3, 1,
-    1, 1, 0, 1,
-    1, 0, 0, 0,
-];
-
-const TEST_OBJECT_MAP : number[] = [
-
-    0, 1, 0, 0,
-    0, 0, 2, 3,
-    0, 2, 0, 2,
-    0, 0, 3, 0,
-];
+import { LEVEL_DATA } from "./leveldata.js";
 
 
 const STAR_POSITIONS : number[][][] = 
@@ -49,6 +33,8 @@ export class Game implements Scene {
     private cutscenePhase : number = 0;
     private cutsceneTimer : number = 0;
 
+    private levelIndex : number = 0;
+
 
     constructor() {
         
@@ -56,10 +42,34 @@ export class Game implements Scene {
     }
 
 
+    private initializeLevel() : void {
+        
+        this.cutsceneStarted = false;
+        this.cameraPos = 0.0;
+
+        this.stage = new Stage(LEVEL_DATA[this.levelIndex], 4, 4);
+        // Yes, pause menu needs to be recreated each time..
+        // TODO: Maybe do not recreate the whole Stage object each
+        // time...?
+        this.pauseMenu = createPauseMenu(this.stage, () => {
+
+            // TODO: Quit
+        });
+    }
+
+
+    private nextLevel() : void {
+
+        ++ this.levelIndex;
+        this.initializeLevel();
+    }
+
+
     private updateCutscene(prog : ProgramInterface) : void {
 
         const CAMERA_MOVE_SPEED : number = 2.0;
         const TEXT_FLICKER_TIME : number = 60;
+        const FINAL_WAIT_TIME : number = 30;
 
         const camTarget : number = -prog.screenHeight;
 
@@ -83,6 +93,16 @@ export class Game implements Scene {
             if (this.cutsceneTimer >= TEXT_FLICKER_TIME) {
 
                 this.cutscenePhase = 2;
+                this.cutsceneTimer = 0.0;
+            }
+            break;
+
+        case 2:
+
+            this.cutsceneTimer += prog.step;
+            if (this.cutsceneTimer >= FINAL_WAIT_TIME) {
+
+                this.nextLevel();
             }
             break;
 
@@ -168,7 +188,7 @@ export class Game implements Scene {
         const bmpFontWhite : Bitmap = assets.getBitmap(BitmapIndex.FontWhite)!;
         if (!this.cutsceneStarted) {
 
-            canvas.drawText(bmpFontWhite, "LEVEL 1", canvas.width/2, 1, Align.Center);
+            canvas.drawText(bmpFontWhite, `LEVEL ${this.levelIndex + 1}`, canvas.width/2, 1, Align.Center);
             return;
         }
 
@@ -192,13 +212,11 @@ export class Game implements Scene {
 
     public init(param : SceneChangeParameter, prog : ProgramInterface) : void {
         
-        this.cutsceneStarted = false;
+        if (typeof(param) === "number") {
 
-        this.stage = new Stage(TEST_HEIGHT_MAP, TEST_OBJECT_MAP, 4, 4);
-        this.pauseMenu = createPauseMenu(this.stage, () => {
-
-            // TODO: Quit
-        });
+            this.levelIndex = param;
+        }
+        this.initializeLevel();
     }
 
 
