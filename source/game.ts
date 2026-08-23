@@ -59,7 +59,7 @@ export class Game implements Scene {
     private updateCutscene(prog : ProgramInterface) : void {
 
         const CAMERA_MOVE_SPEED : number = 2.0;
-        const TEXT_FLICKER_TIME : number = 90;
+        const TEXT_FLICKER_TIME : number = 60;
 
         const camTarget : number = -prog.screenHeight;
 
@@ -130,9 +130,22 @@ export class Game implements Scene {
 
             const t : number = this.cutscenePhase == 0 ? this.cutsceneTimer : 1.0;
             const dw : number = Math.round(bmpRainbow.width*t);
+            const dh : number = bmpRainbow.height;
+            const left : number = canvas.width/2 - bmpRainbow.width/2;
+            const top : number = CLOUD_Y - 40;
 
-            canvas.drawBitmap(bmpRainbow, Flip.None, canvas.width/2 - bmpRainbow.width/2, CLOUD_Y - 40,
-                0, 0, dw, bmpRainbow.height);
+            canvas.drawBitmap(bmpRainbow, Flip.None, left, top, 0, 0, dw, dh);
+
+            if (this.cutscenePhase == 0) {
+
+                const dx : number = left + dw;
+                const dy : number = top + dh - Math.sqrt(Math.max(0.0, 1 - (t - 0.5)*(t - 0.5)*4))*dh;
+
+                for (let i : number = 0; i < 4; ++ i) {
+
+                    canvas.drawBitmap(bmpBase, Flip.None, dx - 4, dy + i*10, 56, 56, 8, 8);
+                }
+            }
         }
         
 

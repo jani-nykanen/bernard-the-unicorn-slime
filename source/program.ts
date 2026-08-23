@@ -2,12 +2,15 @@ import { Keyboard } from "./keyboard.js";
 import { Renderer } from "./renderer.js";
 import { Scene, SceneChangeParameter } from "./scene.js";
 import { AssetManager } from "./assetmanager.js";
+import { AudioPlayer } from "./audioplayer.js";
+import { RenderTarget } from "./rendertarget.js";
 
 
 export interface ProgramInterface {
 
     get keyboard() : Keyboard;
     get assets() : AssetManager;
+    get audio() : AudioPlayer;
     get step() : number;
 
     get screenWidth() : number;
@@ -20,6 +23,8 @@ export interface ProgramInterface {
 
 export type OnInitCallback = (prog : ProgramInterface) => void;
 export type OnLoadCallback = (prog : ProgramInterface) => void;
+export type WaitInputRenderCallback = (canvas : RenderTarget, assets : AssetManager) => void;
+export type OnAudioPreparedCallback = (prog : ProgramInterface) => void;
 
 
 export class Program implements ProgramInterface {
@@ -28,6 +33,7 @@ export class Program implements ProgramInterface {
     private timeSum : number = 0.0;
     private oldTime : number = 0.0;
     private initialized : boolean = false;
+    private audioPrepared : boolean = false;
 
     private _step : number;
 
@@ -37,9 +43,12 @@ export class Program implements ProgramInterface {
 
     private onInitEvent : OnInitCallback;
     private onLoadEvent : OnLoadCallback;
+    private waitInputRenderEvent : WaitInputRenderCallback;
+    private onAudioPreparedEvent : OnAudioPreparedCallback;
 
     public readonly keyboard : Keyboard;
     public readonly assets : AssetManager;
+    public readonly audio : AudioPlayer;
 
     
     public get step() : number {
@@ -57,15 +66,23 @@ export class Program implements ProgramInterface {
 
 
     constructor(canvasWidth : number, canvasHeight : number, framerate : number,
-        onInit : OnInitCallback, onLoad : OnLoadCallback) {
+        globalVolume : number, onInit : OnInitCallback, onLoad : OnLoadCallback,
+        waitInputRenderEvent : WaitInputRenderCallback, onAudioPrepared : OnAudioPreparedCallback) {
 
-        this.keyboard = new Keyboard();
-        this.renderer = new Renderer(canvasWidth, canvasHeight);
-        this.scenes = new Map<string, Scene> ();
-        this.assets = new AssetManager();
+        this.audio = new AudioPlayer(globalVolume);
 
         this.onInitEvent = onInit;
         this.onLoadEvent = onLoad;
+        this.waitInputRenderEvent = waitInputRenderEvent;
+        this.onAudioPreparedEvent = onAudioPrepared;
+
+        this.keyboard = new Keyboard((ctx : AudioContext) : void => {
+
+            this.audio.setContext(ctx);
+        });
+        this.renderer = new Renderer(canvasWidth, canvasHeight);
+        this.scenes = new Map<string, Scene> ();
+        this.assets = new AssetManager();
 
         this._step = 60/framerate;
 
@@ -93,9 +110,18 @@ export class Program implements ProgramInterface {
 
             if (this.initialized) {
 
-                this.activeScene?.update(this);
+                if (this.audio.contextCreated()) {
+
+                    if (!this.audioPrepared) {
+
+                        this.onAudioPreparedEvent(this);
+                        this.audioPrepared = true;
+                    }
+                    this.activeScene?.update(this);
+                }
             }
 
+            // TODO: Why is this called here...?
             if (loaded && !this.initialized) {
                 
                 this.onLoadEvent?.(this);
@@ -112,7 +138,14 @@ export class Program implements ProgramInterface {
 
         if (refreshScreen && loaded) {
 
-            this.activeScene?.redraw(this.renderer.canvas, this.assets);
+            if (!this.audio.contextCreated()) {
+
+                this.waitInputRenderEvent(this.renderer.canvas, this.assets);
+            }
+            else {
+
+                this.activeScene?.redraw(this.renderer.canvas, this.assets);
+            }
         }
 
         window.requestAnimationFrame((ts : number) => this.loop(ts));

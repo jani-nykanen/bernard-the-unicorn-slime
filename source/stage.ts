@@ -194,7 +194,7 @@ export class Stage {
 
                     for (let j : number = i + 1; j < this.objects.length; ++ j) {
                     
-                        o.checkOverlay(this.objects[j]);
+                        o.checkOverlay(this.objects[j], prog);
                     }
                 }
 

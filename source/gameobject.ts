@@ -10,6 +10,7 @@ import { ActionIndex } from "./keyconfig.js";
 import { Direction } from "./direction.js";
 import { MASTER_PALETTE } from "./palette.js";
 import { nextParticle, Particle, ParticleType } from "./particle.js";
+import { SoundIndex } from "./assetindex.js";
 
 
 export const enum GameObjectType {
@@ -96,7 +97,7 @@ export class GameObject {
     }
 
 
-    private move(terrain : Terrain, dirx : number, dirz : number) : boolean {
+    private move(terrain : Terrain, dirx : number, dirz : number, prog : ProgramInterface) : boolean {
 
         const x : number = (this.basePos.x) | 0;
         const y : number = (this.basePos.y) | 0;
@@ -148,6 +149,15 @@ export class GameObject {
 
         terrain.markObject(x, y, z, null);
         // terrain.markObject(dx, dy, dz, this);
+
+        if (this.type == GameObjectType.Boulder) {
+
+            prog.audio.playSound(prog.assets.getSound(SoundIndex.Push)!, 0.80);
+        }
+        else if (this.jumping) {
+
+            prog.audio.playSound(prog.assets.getSound(SoundIndex.Jump)!, 0.80);
+        }
 
         return true;
     }
@@ -225,7 +235,7 @@ export class GameObject {
 
         if (dirx != 0 || dirz != 0) {
 
-            this.move(terrain, dirx, dirz);
+            this.move(terrain, dirx, dirz, prog);
         }
     }
 
@@ -297,6 +307,10 @@ export class GameObject {
         if (this.renderPos.y <= this.targetPos.y) {
 
             this.terminateMovement(terrain);
+            if (this.type == GameObjectType.Boulder) {
+
+                prog.audio.playSound(prog.assets.getSound(SoundIndex.Fall)!, 0.80);
+            }
         }
     }
 
@@ -576,7 +590,7 @@ export class GameObject {
     }
 
 
-    public checkOverlay(o : GameObject) : boolean {
+    public checkOverlay(o : GameObject, prog : ProgramInterface) : boolean {
 
         if (!this.exists || !o.exists || !this.targetPos.equals(o.targetPos)) {
 
@@ -588,6 +602,9 @@ export class GameObject {
 
             this.spawnGemParticles();
             o.kill(false);
+
+            prog.audio.playSound(prog.assets.getSound(SoundIndex.Gem)!, 0.80);
+
             return false;
         }
 

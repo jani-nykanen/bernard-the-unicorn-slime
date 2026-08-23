@@ -44,6 +44,7 @@ export class Keyboard {
     private actions : Map<number, Action>;
 
     private _anyPressed : boolean = false;
+    private audioContextCreated : boolean = false;
 
 
     public get anyPressed() : boolean {
@@ -55,7 +56,7 @@ export class Keyboard {
     static _defaultState : InputState = defaultState();
 
 
-    constructor() {
+    constructor(createAudioContextEvent : (ctx : AudioContext) => void) {
 
         this.states = new Map<string, InputState> ();
         this.prevent = new Set<string> ();
@@ -64,6 +65,12 @@ export class Keyboard {
         // TODO: Verify that e.timestamp works as intended (if not, change
         // to Date.now())
         window.addEventListener("keydown", (e : KeyboardEvent) : void  => {
+
+            if (!this.audioContextCreated) {
+
+                createAudioContextEvent(new AudioContext());
+                this.audioContextCreated = true;
+            }
 
             this.keyEvent(e.code, true, e.timeStamp);
             if (this.prevent.has(e.code)) {

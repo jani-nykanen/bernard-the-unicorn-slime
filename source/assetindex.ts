@@ -13,3 +13,12 @@ export const enum BitmapIndex {
     FontBrightGray = 8,
     FontWhite = 9
 }
+
+
+export const enum SoundIndex {
+
+    Gem = 0,
+    Push = 1,
+    Jump = 2,
+    Fall = 3,
+}

@@ -1,11 +1,13 @@
 import { Program, ProgramInterface } from "./program.js";
 import { Game } from "./game.js";
-import { BitmapIndex } from "./assetindex.js"
+import { BitmapIndex, SoundIndex } from "./assetindex.js"
 import { MASTER_PALETTE } from "./palette.js";
 import { initKeyConfig } from "./keyconfig.js";
 import { AssetManager } from "./assetmanager.js";
 import { Bitmap } from "./bitmap.js";
 import { RenderTarget } from "./rendertarget.js";
+import { AudioPlayer } from "./audioplayer.js";
+import { OscType, Ramp } from "./sound.js";
 
 
 const ALPHA_MASK : number[] = 
@@ -65,7 +67,7 @@ const generateRainbow = () : Bitmap => {
 }
 
 
-export const generateAssets = (assets : AssetManager) : void => {
+export const generateBitmaps = (assets : AssetManager) : void => {
 
     // Base tileset
     assets.applyPalette(
@@ -84,4 +86,43 @@ export const generateAssets = (assets : AssetManager) : void => {
     assets.addBitmap(BitmapIndex.Moon, generateMoon());
     // Rainbow
     assets.addBitmap(BitmapIndex.Rainbow, generateRainbow());
+}
+
+
+export const createSounds = (audio : AudioPlayer, assets : AssetManager) : void => {
+
+    assets.addSound(SoundIndex.Gem, 
+        audio.createSound(
+            [160, 4, 0.60,
+            100, 2, 0.80,
+            256, 10, 1.00],
+            0.50,
+            OscType.Square, 
+            Ramp.Instant)!);
+
+    assets.addSound(SoundIndex.Push, 
+        audio.createSound(
+            [128, 6, 1.0,
+            88, 4, 0.20], 
+            0.70,
+            OscType.Square, 
+            Ramp.Exponential)!);  
+
+    assets.addSound(SoundIndex.Jump, 
+        audio.createSound(
+            [96,  4, 0.50,
+            112, 3, 0.80,
+            160, 6, 0.60,
+            224, 4, 0.20], 
+            0.80,
+            OscType.Sawtooth, 
+            Ramp.Exponential)!);  
+
+    assets.addSound(SoundIndex.Fall, 
+        audio.createSound(
+            [96, 7, 1.0,
+            64, 3, 0.20], 
+            0.70,
+            OscType.Square, 
+            Ramp.Exponential)!);  
 }
