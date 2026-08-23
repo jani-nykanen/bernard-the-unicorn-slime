@@ -5,11 +5,11 @@ import { Align, RenderTarget } from "./rendertarget.js";
 import { ActionIndex } from "./keyconfig.js";
 import { InputFlag } from "./keyboard.js";
 import { AssetManager } from "./assetmanager.js";
-import { BitmapIndex } from "./assetindex.js";
+import { BitmapIndex, SoundIndex } from "./assetindex.js";
 import { MASTER_PALETTE } from "./palette.js";
 
 
-export type MenuButtonCallback = (prog? : ProgramInterface) => boolean;
+export type MenuButtonCallback = (button : MenuButton, prog : ProgramInterface) => boolean;
 
 
 export class MenuButton {
@@ -35,7 +35,7 @@ export class MenuButton {
 
     public evaluate(prog : ProgramInterface) : boolean {
 
-        return this.callback(prog);
+        return this.callback(this, prog);
     }
 
 
@@ -98,6 +98,7 @@ export class Menu {
         if (this.canCancel &&
             prog.keyboard.getActionState(ActionIndex.Back).flag == InputFlag.Pressed) {
             
+            prog.audio.playSound(prog.assets.getSound(SoundIndex.Pause)!, 0.80);
             this.active = false;
             return;
         }
@@ -114,6 +115,7 @@ export class Menu {
         }
         if (oldPos != this.cursorPos) {
 
+            prog.audio.playSound(prog.assets.getSound(SoundIndex.Select)!, 0.80);
             this.cursorPos = signedMod(this.cursorPos, this.buttons.length);
         }
 
@@ -123,6 +125,7 @@ export class Menu {
 
                 this.active = false;
             }
+            prog.audio.playSound(prog.assets.getSound(SoundIndex.Accept)!, 0.80);
         }
     }
 

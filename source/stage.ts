@@ -1,4 +1,4 @@
-import { BitmapIndex } from "./assetindex.js";
+import { BitmapIndex, SoundIndex } from "./assetindex.js";
 import { AssetManager } from "./assetmanager.js";
 import { Bitmap } from "./bitmap.js";
 import { DepthObjectBuffer } from "./depthobjectbuffer.js";
@@ -230,10 +230,12 @@ export class Stage {
 
         if (prog.keyboard.getActionState(ActionIndex.Undo).flag == InputFlag.Pressed) {
 
+            prog.audio.playSound(prog.assets.getSound(SoundIndex.Undo)!, 0.80);
             this.undo();
         }
         else if (prog.keyboard.getActionState(ActionIndex.Reset).flag == InputFlag.Pressed) {
 
+            prog.audio.playSound(prog.assets.getSound(SoundIndex.Restart)!, 0.80);
             this.reset();
         }
     }

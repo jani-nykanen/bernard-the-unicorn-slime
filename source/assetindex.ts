@@ -21,4 +21,10 @@ export const enum SoundIndex {
     Push = 1,
     Jump = 2,
     Fall = 3,
+    Victory = 4,
+    Restart = 5,
+    Undo = 6,
+    Pause = 7,
+    Select = 8,
+    Accept = 9,
 }

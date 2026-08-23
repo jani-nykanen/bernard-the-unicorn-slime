@@ -66,10 +66,11 @@ export class Keyboard {
         // to Date.now())
         window.addEventListener("keydown", (e : KeyboardEvent) : void  => {
 
-            if (!this.audioContextCreated) {
+            if (!this.audioContextCreated && e.code != "Escape") {
 
                 createAudioContextEvent(new AudioContext());
                 this.audioContextCreated = true;
+                return;
             }
 
             this.keyEvent(e.code, true, e.timeStamp);
