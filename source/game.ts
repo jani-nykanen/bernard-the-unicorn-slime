@@ -33,7 +33,7 @@ export class Game implements Scene {
     private cutscenePhase : number = 0;
     private cutsceneTimer : number = 0;
 
-    private levelIndex : number = 2;
+    private levelIndex : number = 0;
 
 
     constructor() {
@@ -45,6 +45,8 @@ export class Game implements Scene {
     private initializeLevel() : void {
         
         this.cutsceneStarted = false;
+        this.cutsceneTimer = 0.0;
+        this.cutscenePhase = 0;
         this.cameraPos = 0.0;
 
         this.stage = new Stage(LEVEL_DATA[this.levelIndex]);

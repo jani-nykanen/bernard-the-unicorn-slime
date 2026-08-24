@@ -120,7 +120,8 @@ export class GameObject {
 
         if (this.type == GameObjectType.Boulder) {
 
-            if (!terrain.isSlimeNearby(x - dirx, y, z - dirz, terrain.heightAt(x, z))) {
+            if (!terrain.isSlimeNearby(x - dirx, y, z - dirz, terrain.heightAt(x, z)) ||
+                terrain.objectAt(x, y + 1, z) !== null) {
 
                 return false;
             }
@@ -134,7 +135,7 @@ export class GameObject {
 
         let objectInFront : GameObject | null = terrain.objectAt(dx, y, dz);
         if (objectInFront?.isSolid() === true) {
-
+            
             return false;
         }
 
@@ -175,7 +176,7 @@ export class GameObject {
     }
 
 
-    private checkFalling(terrain : Terrain, prog : ProgramInterface) : boolean {
+    private checkFalling(terrain : Terrain) : boolean {
 
         const x : number = (this.basePos.x) | 0;
         const y : number = (this.basePos.y) | 0;
@@ -193,62 +194,6 @@ export class GameObject {
             return true;
         }
         return false;
-    }
-
-
-    private control(terrain : Terrain, prog : ProgramInterface) : void {
-
-        if (this.moving) {
-
-            return;
-        }
-
-        if (this.checkFalling(terrain, prog)) {
-
-            return;
-        }
-
-        if (this.type != GameObjectType.Slime && 
-            this.type != GameObjectType.Boulder) {
-
-            return;
-        }
-
-        const right : InputState = prog.keyboard.getActionState(ActionIndex.Right);
-        const up : InputState = prog.keyboard.getActionState(ActionIndex.Up);
-        const left : InputState = prog.keyboard.getActionState(ActionIndex.Left);
-        const down : InputState = prog.keyboard.getActionState(ActionIndex.Down);
-
-        const maxTimestamp : number = Math.max(right.timestamp, up.timestamp, left.timestamp, down.timestamp);
-
-        let dirx : number = 0;
-        let dirz : number = 0;
-
-        if ((right.flag & InputFlag.DownOrPressed) != 0 && right.timestamp >= maxTimestamp) {
-
-            dirx = 1;
-            this._faceDir = Direction.Right;
-        }
-        else if ((left.flag & InputFlag.DownOrPressed) != 0 && left.timestamp >= maxTimestamp) {
-
-            dirx = -1;
-            this._faceDir = Direction.Left;
-        }
-        else if ((down.flag & InputFlag.DownOrPressed) != 0 && down.timestamp >= maxTimestamp) {
-
-            dirz = 1;
-            this._faceDir = Direction.Down;
-        }
-        else if ((up.flag & InputFlag.DownOrPressed) != 0 && up.timestamp >= maxTimestamp) {
-
-            dirz = -1;
-            this._faceDir = Direction.Up;
-        }
-
-        if (dirx != 0 || dirz != 0) {
-
-            this.move(terrain, dirx, dirz, prog);
-        }
     }
 
 
@@ -503,13 +448,65 @@ export class GameObject {
     }
 
 
-    public update(terrain : Terrain, canMove : boolean, prog : ProgramInterface) : void {
-                
-        if (canMove) {
-        
-            this.control(terrain, prog);
+    public control(terrain : Terrain, prog : ProgramInterface) : boolean {
+
+        if (this.moving) {
+
+            return false;
         }
 
+        if (this.checkFalling(terrain)) {
+
+            return true;
+        }
+
+        if (this.type != GameObjectType.Slime && 
+            this.type != GameObjectType.Boulder) {
+
+            return false;
+        }
+
+        const right : InputState = prog.keyboard.getActionState(ActionIndex.Right);
+        const up : InputState = prog.keyboard.getActionState(ActionIndex.Up);
+        const left : InputState = prog.keyboard.getActionState(ActionIndex.Left);
+        const down : InputState = prog.keyboard.getActionState(ActionIndex.Down);
+
+        const maxTimestamp : number = Math.max(right.timestamp, up.timestamp, left.timestamp, down.timestamp);
+
+        let dirx : number = 0;
+        let dirz : number = 0;
+
+        if ((right.flag & InputFlag.DownOrPressed) != 0 && right.timestamp >= maxTimestamp) {
+
+            dirx = 1;
+            this._faceDir = Direction.Right;
+        }
+        else if ((left.flag & InputFlag.DownOrPressed) != 0 && left.timestamp >= maxTimestamp) {
+
+            dirx = -1;
+            this._faceDir = Direction.Left;
+        }
+        else if ((down.flag & InputFlag.DownOrPressed) != 0 && down.timestamp >= maxTimestamp) {
+
+            dirz = 1;
+            this._faceDir = Direction.Down;
+        }
+        else if ((up.flag & InputFlag.DownOrPressed) != 0 && up.timestamp >= maxTimestamp) {
+
+            dirz = -1;
+            this._faceDir = Direction.Up;
+        }
+
+        if (dirx != 0 || dirz != 0) {
+
+            return this.move(terrain, dirx, dirz, prog);
+        }
+        return false;
+    }
+
+
+    public update(terrain : Terrain, prog : ProgramInterface) : void {
+                
         switch (this.type) {
 
         case GameObjectType.Slime:
@@ -601,7 +598,14 @@ export class GameObject {
 
         if (this.targetPos.equals(o.targetPos)) {
 
-            ++ this.targetPos.y;
+            if (this.basePos.y > o.basePos.y) {
+
+                ++ this.targetPos.y;
+            }
+            else {
+
+                ++ o.targetPos.y;
+            }
             return true;
         }
         return false;

@@ -70,9 +70,11 @@ export class Tile implements DepthObject {
         }
 
         // Outline
-        if (this.pos.y > this.neighborhood[3] && this.pos.y > this.neighborhood[7]) {
+        const dif1 : number = this.pos.y - this.neighborhood[3];
+        const dif2 : number = this.pos.y - this.neighborhood[7];
+        if (dif1 > 0 && dif2 > 0) {
             
-            const h : number = this.neighborhood[3] < 0 && this.neighborhood[7] < 0 ? canvas.height : 12;
+            const h : number = this.neighborhood[3] < 0 && this.neighborhood[7] < 0 ? canvas.height : Math.min(dif1, dif2)*12;
             canvas.setDrawColor(...MASTER_PALETTE[0]);
             canvas.fillRect(dx - 12, dy, 1, h);
         }

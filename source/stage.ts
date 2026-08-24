@@ -26,7 +26,7 @@ export class Stage {
     private info : ObjectInfo = new ObjectInfo();
     private particles : Particle[] = [];
 
-    private wasAnythingMoving : boolean = false;
+    private anythingMoving : boolean = false;
     private _cleared : boolean = false;
 
     public readonly width : number;
@@ -74,7 +74,6 @@ export class Stage {
 
         this.activeState.flush();
         for (const o of this.objects) {
-
 
             // NOTE: Nonexistent objects are also pushed to the buffer,
             // because... well, I tried to change this but things went
@@ -163,8 +162,6 @@ export class Stage {
 
                         conflicts = true;
                     }
-                    // TODO: Verify if there is a reason to check also a conflict between
-                    // index j and i (resolveConflicts is not symmetric!!!)
                 }
             }
         }
@@ -192,12 +189,10 @@ export class Stage {
     } 
 
 
-    private updateObjects(prog : ProgramInterface) : void {
+    private initiateObjectMovement(prog : ProgramInterface) : void {
 
-        this._cleared = true;
-        let anythingMoving : boolean = false;
         let somethingNewMoved : boolean = false;
-        const canMove : boolean = !this.wasAnythingMoving;
+        let somethingMoved : boolean = true;
         do {
 
             somethingNewMoved = false;
@@ -209,38 +204,62 @@ export class Stage {
                     continue;
                 }
 
-                if (this._cleared && o.type == GameObjectType.Gem) {
+                // Check movement
+                if (o.control(this.terrain, prog)) {
 
-                    this._cleared = false;
-                }
-
-                // Update base logic & check movement
-                const wasMoving : boolean = o.isMoving();
-                o.update(this.terrain, canMove, prog);
-                if (!wasMoving && o.isMoving()) {
-
+                    somethingMoved = true;
                     somethingNewMoved = true;
                 }
-                anythingMoving ||= o.isMoving();
             }
         }
         while (somethingNewMoved);
 
-        this.resolveConflicts();
+        if (somethingMoved) {
+
+            this.resolveConflicts();
+        }
+    }
+
+
+    private updateObjects(prog : ProgramInterface) : void {
+
+        this._cleared = true;
+        if (!this.anythingMoving) {
+
+            this.initiateObjectMovement(prog);
+        }
         
-        if (!anythingMoving && this.wasAnythingMoving) {
+        const wasAnythingMoving : boolean = this.anythingMoving;
+        this.anythingMoving = false;
+        this._cleared = true;
+        for (const o of this.objects) {
+
+            if (!o.exists) {
+
+                continue;
+            }
+
+            o.update(this.terrain, prog);
+            this.anythingMoving ||= o.isMoving();
+
+            if (this._cleared && o.type == GameObjectType.Gem) {
+
+                this._cleared = false;
+            }
+        }
+
+        if (!this.anythingMoving && wasAnythingMoving) {
 
             this.checkObjectOverlay(prog);
             this.stateBuffer.pushState(this.activeState);
             this.refreshState();
         }
-        this.wasAnythingMoving = anythingMoving;
     }
 
 
     private checkKeyboardActions(prog : ProgramInterface) {
 
-        if (this.wasAnythingMoving) {
+        if (this.anythingMoving) {
 
             return;
         }
@@ -264,7 +283,7 @@ export class Stage {
 
             this.terrain.flush();
             this.updateObjects(prog);
-            if (!this.wasAnythingMoving) {
+            if (!this.anythingMoving) {
                 
                 this.checkKeyboardActions(prog);
             }
