@@ -40,23 +40,20 @@ export class Stage {
     }
 
 
-    constructor(levelData : string, width : number, depth : number) {
+    constructor(levelData : string) {
 
         const MAX_STATE_COUNT : number = 32;
         const STATE_BUFFER_MAX_OBJECT_COUNT : number = 32;
 
         this.width = parseInt(levelData[0], 32);
-        this.height = parseInt(levelData[1], 32);
+        this.depth = parseInt(levelData[1], 32);
         
-        const len : number = this.width*this.height;
+        const len : number = this.width*this.depth;
         const heightData : number[] = levelData.substring(2, 2 + len).split("").map((c : string) => parseInt(c, 32));
         const objectData : number[] = levelData.substring(2 + len).split("").map((c : string) => parseInt(c, 32));
 
         this.depthBuffer = new DepthObjectBuffer();
-        this.terrain = new Terrain(heightData, width, depth, this.depthBuffer);
-
-        this.width = width;
-        this.depth = depth;
+        this.terrain = new Terrain(heightData, this.width, this.depth, this.depthBuffer);
         this.height = this.terrain.maxHeight;
 
         this.stateBuffer = new StateBuffer(MAX_STATE_COUNT, STATE_BUFFER_MAX_OBJECT_COUNT);
@@ -137,7 +134,6 @@ export class Stage {
                 if (objectID >= MOVING_OBJECT_FIRST && objectID <= MOVING_OBJECT_LAST) {
                 
                     const o : GameObject = new GameObject(x, y, z, objectID, this.particles);
-
                     this.objects.push(o);
                     this.depthBuffer.pushObject(o);
                     this.terrain.markObject(x, y, z, o);

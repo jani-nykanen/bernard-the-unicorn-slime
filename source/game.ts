@@ -33,7 +33,7 @@ export class Game implements Scene {
     private cutscenePhase : number = 0;
     private cutsceneTimer : number = 0;
 
-    private levelIndex : number = 0;
+    private levelIndex : number = 2;
 
 
     constructor() {
@@ -47,7 +47,7 @@ export class Game implements Scene {
         this.cutsceneStarted = false;
         this.cameraPos = 0.0;
 
-        this.stage = new Stage(LEVEL_DATA[this.levelIndex], 4, 4);
+        this.stage = new Stage(LEVEL_DATA[this.levelIndex]);
         // Yes, pause menu needs to be recreated each time..
         // TODO: Maybe do not recreate the whole Stage object each
         // time...?
