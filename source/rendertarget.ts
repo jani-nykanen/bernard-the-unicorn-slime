@@ -117,6 +117,44 @@ export class RenderTarget {
     }
 
 
+    public fillCircleOutside(r : number, cx : number = this.width/2, cy : number = this.height/2) : void {
+
+        const start : number = Math.max(0, cy - r) | 0;
+        const end : number = Math.min(this.height, cy + r) | 0;
+
+        if (start > 0) {
+
+            this.fillRect(0, 0, this.width, start);
+        }
+        if (end < this.height) {
+
+            this.fillRect(0, end, this.width, this.height - end);
+        }
+
+        for (let y : number = start; y < end; ++ y) {
+
+            const dy : number = y - cy;
+            if (Math.abs(dy) >= r) {
+
+                this.ctx.fillRect(0, y, this.width, 1);
+                continue;
+            }
+
+            const px1 : number = Math.round(cx - Math.sqrt(r*r - dy*dy));
+            const px2 : number = Math.round(cx + Math.sqrt(r*r - dy*dy));
+
+            if (px1 > 0) {
+
+                this.ctx.fillRect(0, y, px1, 1);
+            }
+            if (px2 < this.width) {
+
+                this.ctx.fillRect(px2, y, this.width - px1, 1);
+            }
+        }
+    }
+
+
     public drawBitmap(bmp : Bitmap, flip : Flip = Flip.None,
         dx : number = 0.0, dy : number = 0.0, 
         sx : number = 0.0, sy : number = 0.0, sw : number = bmp.width, sh : number = bmp.height) : void {

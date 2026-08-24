@@ -4,6 +4,7 @@ import { Scene, SceneChangeParameter } from "./scene.js";
 import { AssetManager } from "./assetmanager.js";
 import { AudioPlayer } from "./audioplayer.js";
 import { RenderTarget } from "./rendertarget.js";
+import { Transition } from "./transition.js";
 
 
 export interface ProgramInterface {
@@ -11,6 +12,7 @@ export interface ProgramInterface {
     get keyboard() : Keyboard;
     get assets() : AssetManager;
     get audio() : AudioPlayer;
+    get transition() : Transition;
     get step() : number;
 
     get screenWidth() : number;
@@ -49,6 +51,7 @@ export class Program implements ProgramInterface {
     public readonly keyboard : Keyboard;
     public readonly assets : AssetManager;
     public readonly audio : AudioPlayer;
+    public readonly transition : Transition;
 
     
     public get step() : number {
@@ -83,6 +86,7 @@ export class Program implements ProgramInterface {
         this.renderer = new Renderer(canvasWidth, canvasHeight);
         this.scenes = new Map<string, Scene> ();
         this.assets = new AssetManager();
+        this.transition = new Transition();
 
         this._step = 60/framerate;
 
@@ -112,21 +116,30 @@ export class Program implements ProgramInterface {
 
                 if (this.audio.contextCreated()) {
 
+                    // TODO: Why is this called here...?
                     if (!this.audioPrepared) {
 
                         this.onAudioPreparedEvent(this);
                         this.audioPrepared = true;
+
+                        this.timeSum = 0.0;
+                        break;
                     }
                     this.activeScene?.update(this);
+                    this.transition.update(this);
                 }
             }
 
-            // TODO: Why is this called here...?
+            // TODO: And this here? (I probably had some *good*
+            // reason to make it work this way in the past?)
             if (loaded && !this.initialized) {
                 
                 this.onLoadEvent?.(this);
                 this.activeScene?.init(null, this);
                 this.initialized = true;
+
+                this.timeSum = 0.0;
+                break;
             }
                 
             if (firstFrame) {
@@ -145,6 +158,7 @@ export class Program implements ProgramInterface {
             else {
 
                 this.activeScene?.redraw(this.renderer.canvas, this.assets);
+                this.transition.draw(this.renderer.canvas);
             }
         }
 

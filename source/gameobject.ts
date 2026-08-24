@@ -81,19 +81,31 @@ export class GameObject {
         this.sprite = new Sprite(16, 16);
 
         this._type = type;
-
-        if (type == GameObjectType.Gem) {
-
-            this.initGemMoveTimer();
-        }
+        this.initialize();
 
         this.particles = particles;
     }
 
 
-    private initGemMoveTimer() : void {
+    private initialize() : void {
+     
+        switch (this.type) {
 
-        this.moveTimer = ((this.basePos.x | 0) % 2 == (this.basePos.z | 0) % 2) ? Math.PI : 0.0;
+        case GameObjectType.Slime:
+
+            this.sprite.setFrame(0, 1);
+            this.computeOrientation();
+            break;
+            
+        case GameObjectType.Gem:
+
+            this.sprite.setFrame(0, 3);
+            this.moveTimer = ((this.basePos.x | 0) % 2 == (this.basePos.z | 0) % 2) ? Math.PI : 0.0;
+            break;
+
+        default:
+            break;
+        }
     }
 
 
@@ -350,16 +362,22 @@ export class GameObject {
     }
 
 
-    private animateSlime(prog : ProgramInterface) : void {
-
-        const FRAME_TIME : number = 15;
-
-        this.faceOffset.x = this.sprite.flip == Flip.Horizontal ? 1 : 7;
-        this.faceOffset.y = this.sprite.column == 2 ? -3 : this.sprite.column - 1;
+    private computeOrientation() : void {
 
         this.sprite.flip = 
             this._faceDir == Direction.Left || this._faceDir == Direction.Down ? 
                 Flip.Horizontal : Flip.None;
+
+        this.faceOffset.x = this.sprite.flip == Flip.Horizontal ? 1 : 7;
+        this.faceOffset.y = this.sprite.column == 2 ? -3 : this.sprite.column - 1;
+    }
+
+
+    private animateSlime(prog : ProgramInterface) : void {
+
+        const FRAME_TIME : number = 15;
+
+        this.computeOrientation();
 
         if (this.targetPos.y < this.basePos.y) {
 
@@ -626,10 +644,7 @@ export class GameObject {
         this.moveTimer = 0.0;
         this._exists = true;
 
-        if (type == GameObjectType.Gem) {
-
-            this.initGemMoveTimer();
-        }
+        this.initialize();
     }
 
 

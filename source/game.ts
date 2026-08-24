@@ -102,7 +102,10 @@ export class Game implements Scene {
             this.cutsceneTimer += prog.step;
             if (this.cutsceneTimer >= FINAL_WAIT_TIME) {
 
-                this.nextLevel();
+                prog.transition.activate(true, 1.0/30.0, (prog : ProgramInterface) : void => {
+
+                    this.nextLevel();
+                });
             }
             break;
 
@@ -217,11 +220,18 @@ export class Game implements Scene {
             this.levelIndex = param;
         }
         this.initializeLevel();
+
+        prog.transition.activate(false, 1.0/30.0);
     }
 
 
     public update(prog : ProgramInterface) : void {
         
+        if (prog.transition.active) {
+
+            return;
+        }
+
         if (this.cutsceneStarted) {
 
             this.stage?.update(prog);
