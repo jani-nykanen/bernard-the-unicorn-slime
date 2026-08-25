@@ -473,6 +473,30 @@ export class GameObject {
     }
 
 
+    private drawCylinder(canvas : RenderTarget, bmp : Bitmap, dx : number, dy : number) : void {
+
+        let top : number = dy - 1;
+        if (this._type == GameObjectType.CylinderDeactivating) {
+
+            top += this.moveTimer*9;
+        } 
+        const bottom : number = dy + 11;
+
+        // "Neck"
+        const neckHeight : number = ((bottom - 3) - top) | 0;
+        if (neckHeight > 0) {
+
+            canvas.drawBitmap(bmp, Flip.None, dx, top + 4, 48, 8, 16, 4, 16, neckHeight);
+        }
+
+        // Bottom
+        canvas.drawBitmap(bmp, Flip.None, dx, dy + 11, 48, 10, 16, 6);
+        // Top
+        canvas.drawBitmap(bmp, Flip.None, dx, top, 48, 0, 16, 8);
+        
+    }
+
+
     public control(terrain : Terrain, prog : ProgramInterface) : boolean {
 
         if (this.moving) {
@@ -586,9 +610,7 @@ export class GameObject {
         case GameObjectType.CylinderDeactivating:
         case GameObjectType.Cylinder:
 
-            canvas.drawBitmap(bmp, Flip.None, dx, dy - 1, 48, 0, 16, 8);
-            canvas.drawBitmap(bmp, Flip.None, dx, dy + 7, 48, 8, 16, 4);
-            canvas.drawBitmap(bmp, Flip.None, dx, dy + 9, 48, 8, 16, 8);
+            this.drawCylinder(canvas, bmp, dx, dy);
             break;
 
         default:

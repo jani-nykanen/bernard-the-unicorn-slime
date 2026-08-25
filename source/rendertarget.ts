@@ -157,7 +157,9 @@ export class RenderTarget {
 
     public drawBitmap(bmp : Bitmap, flip : Flip = Flip.None,
         dx : number = 0.0, dy : number = 0.0, 
-        sx : number = 0.0, sy : number = 0.0, sw : number = bmp.width, sh : number = bmp.height) : void {
+        sx : number = 0.0, sy : number = 0.0, 
+        sw : number = bmp.width, sh : number = bmp.height,
+        dw : number = sw, dh : number = sh) : void {
 
         sx |= 0;
         sy |= 0;
@@ -165,6 +167,8 @@ export class RenderTarget {
         sh |= 0;
         dx = (dx + this.translation.x) | 0;
         dy = (dy + this.translation.y) | 0;
+        dw |= 0;
+        dh |= 0;
 
         const ctx : CanvasRenderingContext2D = this.ctx;
         const transform : boolean = flip != Flip.None;
@@ -187,7 +191,7 @@ export class RenderTarget {
             dy *= -1;
         }
 
-        ctx.drawImage(bmp, sx, sy, sw, sh, dx, dy, sw, sh);
+        ctx.drawImage(bmp, sx, sy, sw, sh, dx, dy, dw, dh);
 
         if (transform) {
 
