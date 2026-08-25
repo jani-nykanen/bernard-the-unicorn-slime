@@ -19,7 +19,9 @@ export const enum GameObjectType {
     Slime = 1,
     Boulder = 2,
     Gem = 3,
-};
+    Cylinder = 4,
+    CylinderDeactivating = 5,
+}
 
 
 export class GameObject {
@@ -220,6 +222,11 @@ export class GameObject {
         const GRAVITY_DELTA : number = 0.0075;
         const JUMP_HEIGHT : number = 0.675;
 
+        if (this._type == GameObjectType.Cylinder) {
+
+            return;
+        }
+
         if (!this.moving) {
 
             this.depthTestPos.makeEqual(this.basePos);
@@ -340,6 +347,24 @@ export class GameObject {
 
         this.sprite.animate(3, 0, 3, FRAME_TIME, prog.step);
         this.moveTimer = (this.moveTimer + WAVE_SPEED*prog.step) % (Math.PI*2.0);
+    }
+
+
+    private updateFallingCylinder(somethingMoving : boolean, terrain : Terrain, prog : ProgramInterface) : void {
+
+        const FALL_SPEED : number = 1.0/10.0;
+
+        if (!somethingMoving) {
+
+            return;
+        }
+
+        this.moveTimer += FALL_SPEED*prog.step;
+        if (this.moveTimer >= 1.0) {
+
+            this._exists = false;
+            terrain.markObject(this.basePos.x, this.basePos.y, this.basePos.z, null);
+        }
     }
 
 
@@ -505,7 +530,7 @@ export class GameObject {
     }
 
 
-    public update(terrain : Terrain, prog : ProgramInterface) : void {
+    public update(somethingMoving : boolean,  terrain : Terrain, prog : ProgramInterface) : void {
                 
         switch (this.type) {
 
@@ -517,6 +542,11 @@ export class GameObject {
         case GameObjectType.Gem:
 
             this.animateGem(prog);
+            break;
+
+        case GameObjectType.CylinderDeactivating:
+
+            this.updateFallingCylinder(somethingMoving, terrain, prog);
             break;
     
         default:
@@ -551,6 +581,14 @@ export class GameObject {
         case GameObjectType.Gem:
 
             this.drawGem(canvas, bmp, dx, dy);
+            break;
+
+        case GameObjectType.CylinderDeactivating:
+        case GameObjectType.Cylinder:
+
+            canvas.drawBitmap(bmp, Flip.None, dx, dy - 1, 48, 0, 16, 8);
+            canvas.drawBitmap(bmp, Flip.None, dx, dy + 7, 48, 8, 16, 4);
+            canvas.drawBitmap(bmp, Flip.None, dx, dy + 9, 48, 8, 16, 8);
             break;
 
         default:
@@ -612,25 +650,41 @@ export class GameObject {
     }
 
 
-    public checkOverlay(o : GameObject, prog : ProgramInterface) : boolean {
+    public objectCollision(o : GameObject, prog : ProgramInterface) : void {
 
-        if (!this.exists || !o.exists || !this.targetPos.equals(o.targetPos)) {
+        if (!this.exists || !o.exists || this.type != GameObjectType.Slime) {
 
-            return false;
+            return;
         }
 
-        // Collect gem
-        if (this.type == GameObjectType.Slime && o.type == GameObjectType.Gem) {
+        
+        switch (o.type) {
 
-            this.spawnGemParticles();
-            o.kill(false);
+        case GameObjectType.Gem:
 
-            prog.audio.playSound(prog.assets.getSound(SoundIndex.Gem)!, 0.80);
+            if (this.targetPos.equals(o.targetPos)) {
 
-            return false;
+                this.spawnGemParticles();
+                o.kill(false);
+
+                prog.audio.playSound(prog.assets.getSound(SoundIndex.Gem)!, 0.80);
+            }
+            break;
+
+        case GameObjectType.Cylinder:
+
+            if (this.basePos.x == o.basePos.x && 
+                this.basePos.z == o.basePos.z && 
+                this.basePos.y == o.basePos.y + 1) {
+
+                o._type = GameObjectType.CylinderDeactivating;
+                this.moveTimer = 0.0;
+            }
+            break;
+
+        default:
+            break;
         }
-
-        return false;
     }
 
 
@@ -661,7 +715,7 @@ export class GameObject {
     public isSolid() : boolean {
 
         // This'll do for now...
-        return this.type < GameObjectType.Gem;
+        return this.type != GameObjectType.Gem;
     }
     
 }

@@ -169,7 +169,7 @@ export class Stage {
     }
 
 
-    private checkObjectOverlay(prog : ProgramInterface) : void {
+    private postprocessObjects(prog : ProgramInterface) : void {
 
         for (let i : number = 0; i < this.objects.length; ++ i) {
 
@@ -182,8 +182,8 @@ export class Stage {
             for (let j : number = i + 1; j < this.objects.length; ++ j) {
                 
                 const o2 : GameObject = this.objects[j];
-                o.checkOverlay(o2, prog);
-                o2.checkOverlay(o, prog);
+                o.objectCollision(o2, prog);
+                o2.objectCollision(o, prog);
             }
         }
     } 
@@ -239,7 +239,7 @@ export class Stage {
                 continue;
             }
 
-            o.update(this.terrain, prog);
+            o.update(wasAnythingMoving, this.terrain, prog);
             this.anythingMoving ||= o.isMoving();
 
             if (this._cleared && o.type == GameObjectType.Gem) {
@@ -250,7 +250,7 @@ export class Stage {
 
         if (!this.anythingMoving && wasAnythingMoving) {
 
-            this.checkObjectOverlay(prog);
+            this.postprocessObjects(prog);
             this.stateBuffer.pushState(this.activeState);
             this.refreshState();
         }
