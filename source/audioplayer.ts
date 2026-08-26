@@ -9,6 +9,8 @@ export class AudioPlayer {
 
     private ctx : AudioContext | null = null;
 
+    private initialized : boolean = false;
+
 
     constructor(globalVolume : number = 0.60) {
 
@@ -28,9 +30,9 @@ export class AudioPlayer {
     }
 
 
-    public playSound(sound : Sound, volume : number = 0.60) : void {
+    public playSound(sound : Sound | null, volume : number = 0.60) : void {
 
-        if (!this.enabled || this.ctx === null) {
+        if (!this.enabled || sound === null || this.ctx === null) {
 
             return;
         }
@@ -54,14 +56,18 @@ export class AudioPlayer {
     }
 
 
-    public setContext(ctx : AudioContext) : void {
+    public setContext(ctx : AudioContext | null) : void {
 
         this.ctx ??= ctx;
+        this.initialized = true;
     }
 
 
     public contextCreated() : boolean {
 
-        return this.ctx !== null;
+        // This used to return whether ctx is null, but in the case
+        // context creation fails, the game should still function,
+        // just without audio.
+        return this.initialized;
     }
 }

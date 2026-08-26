@@ -167,11 +167,11 @@ export class GameObject {
 
         if (this.type == GameObjectType.Boulder) {
 
-            prog.audio.playSound(prog.assets.getSound(SoundIndex.Push)!, 0.80);
+            prog.audio.playSound(prog.assets.getSound(SoundIndex.Push), 0.80);
         }
         else if (this.jumping) {
 
-            prog.audio.playSound(prog.assets.getSound(SoundIndex.Jump)!, 0.80);
+            prog.audio.playSound(prog.assets.getSound(SoundIndex.Jump), 0.80);
         }
 
         return true;
@@ -273,7 +273,7 @@ export class GameObject {
             this.terminateMovement(terrain);
             if (this.type == GameObjectType.Boulder) {
 
-                prog.audio.playSound(prog.assets.getSound(SoundIndex.Fall)!, 0.80);
+                prog.audio.playSound(prog.assets.getSound(SoundIndex.Fall), 0.80);
             }
         }
     }
@@ -689,7 +689,7 @@ export class GameObject {
                 this.spawnGemParticles();
                 o.kill(false);
 
-                prog.audio.playSound(prog.assets.getSound(SoundIndex.Gem)!, 0.80);
+                prog.audio.playSound(prog.assets.getSound(SoundIndex.Gem), 0.80);
             }
             break;
 

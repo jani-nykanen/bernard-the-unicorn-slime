@@ -248,7 +248,7 @@ export class Game implements Scene {
         }
         if (prog.keyboard.getActionState(ActionIndex.Pause).flag == InputFlag.Pressed) {
 
-            prog.audio.playSound(prog.assets.getSound(SoundIndex.Pause)!, 0.80);
+            prog.audio.playSound(prog.assets.getSound(SoundIndex.Pause), 0.80);
             this.pauseMenu!.changeMenuText(3, prog.audio.getStateString());
             this.pauseMenu!.activate(0);
             return;
@@ -260,7 +260,7 @@ export class Game implements Scene {
             this.cutsceneStarted = true;
             this.cutscenePhase = 0;
 
-            prog.audio.playSound(prog.assets.getSound(SoundIndex.Victory)!, 0.80);
+            prog.audio.playSound(prog.assets.getSound(SoundIndex.Victory), 0.80);
         }
     }
 

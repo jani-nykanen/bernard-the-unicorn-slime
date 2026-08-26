@@ -222,16 +222,17 @@ export class Terrain {
  
     public flush(flushObjectPosition : boolean = false) : void {
 
-        for (const k in this.shadowActive) {
+        // Using for ( ... in ...) makes Closure give warnings
+        for (let i : number = 0; i < this.shadowActive.length; ++ i) {
 
-            this.shadowActive[k] = false;
+            this.shadowActive[i] = false;
         }
 
         if (flushObjectPosition) {
             
-            for (const k in this.objectPositions) {
+            for (let i : number = 0; i < this.objectPositions.length; ++ i) {
 
-                this.objectPositions[k] = null;
+                this.objectPositions[i] = null;
             }
         }
     }

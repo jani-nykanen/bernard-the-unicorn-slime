@@ -266,12 +266,12 @@ export class Stage {
 
         if (prog.keyboard.getActionState(ActionIndex.Undo).flag == InputFlag.Pressed) {
 
-            prog.audio.playSound(prog.assets.getSound(SoundIndex.Undo)!, 0.80);
+            prog.audio.playSound(prog.assets.getSound(SoundIndex.Undo), 0.80);
             this.undo();
         }
         else if (prog.keyboard.getActionState(ActionIndex.Reset).flag == InputFlag.Pressed) {
 
-            prog.audio.playSound(prog.assets.getSound(SoundIndex.Restart)!, 0.80);
+            prog.audio.playSound(prog.assets.getSound(SoundIndex.Restart), 0.80);
             this.reset();
         }
     }

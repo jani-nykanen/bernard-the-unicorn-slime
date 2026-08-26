@@ -79,7 +79,7 @@ export class Program implements ProgramInterface {
         this.waitInputRenderEvent = waitInputRenderEvent;
         this.onAudioPreparedEvent = onAudioPrepared;
 
-        this.keyboard = new Keyboard((ctx : AudioContext) : void => {
+        this.keyboard = new Keyboard((ctx : AudioContext | null) : void => {
 
             this.audio.setContext(ctx);
         });

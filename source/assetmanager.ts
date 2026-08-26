@@ -7,7 +7,7 @@ export class AssetManager {
 
 
     private bitmaps : Map<number, Bitmap>;
-    private sounds : Map<number, Sound>;
+    private sounds : Map<number, Sound | null>;
 
     private loadedCount : number = 0;
     private totalCount : number = 0;
@@ -16,7 +16,7 @@ export class AssetManager {
     constructor() {
 
         this.bitmaps = new Map<number, Bitmap> ();
-        this.sounds = new Map<number, Sound> ();
+        this.sounds = new Map<number, Sound | null> ();
     }
 
 
@@ -112,7 +112,7 @@ export class AssetManager {
     }
 
 
-    public addSound(id : number, s : Sound) : void {
+    public addSound(id : number, s : Sound | null) : void {
 
         this.sounds.set(id, s);
     }

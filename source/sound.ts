@@ -56,8 +56,6 @@ export class Sound {
         const osc : OscillatorNode = this.ctx.createOscillator();
         const gain : GainNode = this.ctx.createGain();
 
-        osc.frequency.setValueAtTime
-
         osc.type = TYPE_LOOKUP[this.type] ?? "square";
 
         volume *= this.baseVolume;

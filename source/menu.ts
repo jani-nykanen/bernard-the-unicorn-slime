@@ -98,7 +98,7 @@ export class Menu {
         if (this.canCancel &&
             prog.keyboard.getActionState(ActionIndex.Back).flag == InputFlag.Pressed) {
             
-            prog.audio.playSound(prog.assets.getSound(SoundIndex.Pause)!, 0.80);
+            prog.audio.playSound(prog.assets.getSound(SoundIndex.Pause), 0.80);
             this.active = false;
             return;
         }
@@ -115,7 +115,7 @@ export class Menu {
         }
         if (oldPos != this.cursorPos) {
 
-            prog.audio.playSound(prog.assets.getSound(SoundIndex.Select)!, 0.80);
+            prog.audio.playSound(prog.assets.getSound(SoundIndex.Select), 0.80);
             this.cursorPos = signedMod(this.cursorPos, this.buttons.length);
         }
 
@@ -125,7 +125,7 @@ export class Menu {
 
                 this.active = false;
             }
-            prog.audio.playSound(prog.assets.getSound(SoundIndex.Accept)!, 0.80);
+            prog.audio.playSound(prog.assets.getSound(SoundIndex.Accept), 0.80);
         }
     }
 

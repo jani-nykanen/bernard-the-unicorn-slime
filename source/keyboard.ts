@@ -56,7 +56,7 @@ export class Keyboard {
     static _defaultState : InputState = defaultState();
 
 
-    constructor(createAudioContextEvent : (ctx : AudioContext) => void) {
+    constructor(createAudioContextEvent : (ctx : AudioContext | null) => void) {
 
         this.states = new Map<string, InputState> ();
         this.prevent = new Set<string> ();
@@ -68,7 +68,17 @@ export class Keyboard {
 
             if (!this.audioContextCreated && e.code != "Escape") {
 
-                createAudioContextEvent(new AudioContext());
+                let ctx : AudioContext | null = null
+                try {
+
+                    ctx = new AudioContext();
+                }
+                catch(e) {
+
+                    ctx = null;
+                };
+
+                createAudioContextEvent(ctx);
                 this.audioContextCreated = true;
                 return;
             }
