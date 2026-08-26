@@ -34,7 +34,7 @@ export class Terrain {
 
         this.shadowActive = (new Array<boolean> (width*depth)).fill(false);
         this.shadowPositions = (new Array<Vector> (width*depth)).fill(dummy).map(() => new Vector());
-        this.objectPositions = (new Array<GameObject | null> (width*depth*(this.maxHeight + 2))).fill(null);
+        this.objectPositions = (new Array<GameObject | null> (width*depth*(this.maxHeight + 3))).fill(null);
 
         this.computeTiles();
     }
@@ -104,7 +104,9 @@ export class Terrain {
 
     private outOfBounds(x : number, y : number, z : number) : boolean {
 
-        return x < 0 || y < 0 || z < 0 || x >= this.width || y >= this.maxHeight + 2 || z >= this.depth;
+        return x < 0 || y < 0 || 
+            z < 0 || x >= this.width || 
+            y >= this.maxHeight + 3 || z >= this.depth;
     }
 
 

@@ -21,6 +21,8 @@ export const enum GameObjectType {
     Gem = 3,
     Cylinder = 4,
     CylinderDeactivating = 5,
+    RisingPlatformDeactivated = 6,
+    RisenPlatform = 7,
 }
 
 
@@ -401,6 +403,14 @@ export class GameObject {
     }
 
 
+    private moveUp() : void {
+
+        ++ this.basePos.y;
+        ++ this.renderPos.y;
+        ++ this.targetPos.y;
+    }
+
+
     private drawShadow(canvas : RenderTarget, bmp : Bitmap) : void {
 
         if (this.shadowRef === null) {
@@ -493,7 +503,29 @@ export class GameObject {
         canvas.drawBitmap(bmp, Flip.None, dx, dy + 11, 48, 10, 16, 6);
         // Top
         canvas.drawBitmap(bmp, Flip.None, dx, top, 48, 0, 16, 8);
-        
+        // Face
+        canvas.drawBitmap(bmp, Flip.None, dx + 4, top, 24, 32, 8, 8);
+    }
+
+
+    private drawRisenPlatform(canvas : RenderTarget, bmp : Bitmap, dx : number, dy : number) : void {
+
+        // Shadow
+        canvas.drawBitmap(bmp, Flip.None, dx, dy + 11, 8, 40, 16, 8);
+
+        // Narrow part
+        canvas.drawBitmap(bmp, Flip.None, dx + 3, dy + 10, 48, 8, 5, 8);
+        canvas.drawBitmap(bmp, Flip.None, dx + 8, dy + 10, 59, 8, 5, 8);
+
+        canvas.setDrawColor(...MASTER_PALETTE[2]);
+        canvas.fillRect(dx + 7, dy + 10, 2, 5);
+
+        // Wide part
+        canvas.drawBitmap(bmp, Flip.None, dx, dy + 4, 48, 8, 16, 8);
+        // Top
+        canvas.drawBitmap(bmp, Flip.None, dx, dy - 1, 48, 0, 16, 8);
+        // Arrow
+        canvas.drawBitmap(bmp, Flip.None, dx + 4, dy, 24, 40, 8, 8);
     }
 
 
@@ -613,6 +645,17 @@ export class GameObject {
             this.drawCylinder(canvas, bmp, dx, dy);
             break;
 
+        case GameObjectType.RisingPlatformDeactivated:
+
+            canvas.drawBitmap(bmp, Flip.None, dx, dy + 9, 0, 80, 16, 8);
+            canvas.drawBitmap(bmp, Flip.None, dx + 4, dy + 10, 24, 40, 8, 8);
+            break;
+
+        case GameObjectType.RisenPlatform:
+
+            this.drawRisenPlatform(canvas, bmp, dx, dy);
+            break;
+
         default:
             break;
         }
@@ -672,14 +715,13 @@ export class GameObject {
     }
 
 
-    public objectCollision(o : GameObject, prog : ProgramInterface) : void {
+    public objectCollision(o : GameObject, terrain : Terrain, prog : ProgramInterface) : void {
 
         if (!this.exists || !o.exists || this.type != GameObjectType.Slime) {
 
             return;
         }
 
-        
         switch (o.type) {
 
         case GameObjectType.Gem:
@@ -701,6 +743,20 @@ export class GameObject {
 
                 o._type = GameObjectType.CylinderDeactivating;
                 this.moveTimer = 0.0;
+            }
+            break;
+
+        case GameObjectType.RisingPlatformDeactivated:
+
+            if (this.targetPos.equals(o.targetPos)) {
+            
+                // TODO: A sound!
+
+                o._type = GameObjectType.RisenPlatform;
+                this.moveUp();
+
+                terrain.markObject(this.basePos.x, this.basePos.y - 1, this.basePos.z, o);
+                terrain.markObject(this.basePos.x, this.basePos.y, this.basePos.z, this);
             }
             break;
 
@@ -737,7 +793,8 @@ export class GameObject {
     public isSolid() : boolean {
 
         // This'll do for now...
-        return this.type != GameObjectType.Gem;
+        return this.type != GameObjectType.Gem && 
+            this.type != GameObjectType.RisingPlatformDeactivated;
     }
     
 }

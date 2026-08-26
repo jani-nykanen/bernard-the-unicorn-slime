@@ -182,8 +182,8 @@ export class Stage {
             for (let j : number = i + 1; j < this.objects.length; ++ j) {
                 
                 const o2 : GameObject = this.objects[j];
-                o.objectCollision(o2, prog);
-                o2.objectCollision(o, prog);
+                o.objectCollision(o2, this.terrain, prog);
+                o2.objectCollision(o, this.terrain, prog);
             }
         }
     } 
