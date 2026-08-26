@@ -22,7 +22,8 @@ export const enum GameObjectType {
     Cylinder = 4,
     CylinderDeactivating = 5,
     RisingPlatformDeactivated = 6,
-    RisenPlatform = 7,
+    RisingPlatform = 7,
+    RisenPlatform = 8,
 }
 
 
@@ -224,7 +225,8 @@ export class GameObject {
         const GRAVITY_DELTA : number = 0.0075;
         const JUMP_HEIGHT : number = 0.675;
 
-        if (this._type == GameObjectType.Cylinder) {
+        if (this._type != GameObjectType.Slime &&
+            this._type != GameObjectType.Boulder) {
 
             return;
         }
@@ -246,7 +248,7 @@ export class GameObject {
                 this.renderPos.z = this.targetPos.z;
                 this.gravity = INITIAL_GRAVITY;
 
-                if ((this.targetPos.y | 0) == (this.basePos.y | 0)) {
+                if (this.targetPos.y >= this.basePos.y) {
 
                     this.terminateMovement(terrain);
                     return;
@@ -259,6 +261,10 @@ export class GameObject {
 
             this.renderPos.x = (1.0 - t)*this.basePos.x + t*this.targetPos.x;
             this.renderPos.z = (1.0 - t)*this.basePos.z + t*this.targetPos.z;
+            if (this.targetPos.y > this.basePos.y) {
+
+                this.renderPos.y = (1.0 - t)*this.basePos.y + t*this.targetPos.y;
+            }
 
             if (this.jumping) {
 
@@ -352,7 +358,7 @@ export class GameObject {
     }
 
 
-    private updateFallingCylinder(somethingMoving : boolean, terrain : Terrain, prog : ProgramInterface) : void {
+    private animateFallingCylinder(somethingMoving : boolean, terrain : Terrain, prog : ProgramInterface) : void {
 
         const FALL_SPEED : number = 1.0/10.0;
 
@@ -366,6 +372,19 @@ export class GameObject {
 
             this._exists = false;
             terrain.markObject(this.basePos.x, this.basePos.y, this.basePos.z, null);
+        }
+    }
+
+
+    private animateRisingPlatform(prog : ProgramInterface) : void {
+
+        const RISE_SPEED : number = 1.0/11.0;
+
+        this.moveTimer -= RISE_SPEED*prog.step;
+        if (this.moveTimer <= 0.0) {
+
+            this._type = GameObjectType.RisenPlatform;
+            this.moveTimer = 0.0;
         }
     }
 
@@ -405,9 +424,11 @@ export class GameObject {
 
     private moveUp() : void {
 
-        ++ this.basePos.y;
-        ++ this.renderPos.y;
         ++ this.targetPos.y;
+
+        this.moveTimer = 1.0/8.0;
+        this.moving = true;
+        this.jumping = false;
     }
 
 
@@ -508,7 +529,7 @@ export class GameObject {
     }
 
 
-    private drawRisenPlatform(canvas : RenderTarget, bmp : Bitmap, dx : number, dy : number) : void {
+    private drawRisingPlatform(canvas : RenderTarget, bmp : Bitmap, dx : number, dy : number) : void {
 
         // Shadow
         canvas.drawBitmap(bmp, Flip.None, dx, dy + 11, 8, 40, 16, 8);
@@ -520,12 +541,18 @@ export class GameObject {
         canvas.setDrawColor(...MASTER_PALETTE[2]);
         canvas.fillRect(dx + 7, dy + 10, 2, 5);
 
+        let top : number = dy;
+        if (this._type == GameObjectType.RisingPlatform) {
+        
+            top += this.moveTimer*7.0;
+        }
+
         // Wide part
-        canvas.drawBitmap(bmp, Flip.None, dx, dy + 4, 48, 8, 16, 8);
+        canvas.drawBitmap(bmp, Flip.None, dx, top + 4, 48, 8, 16, 8);
         // Top
-        canvas.drawBitmap(bmp, Flip.None, dx, dy - 1, 48, 0, 16, 8);
+        canvas.drawBitmap(bmp, Flip.None, dx, top - 1, 48, 0, 16, 8);
         // Arrow
-        canvas.drawBitmap(bmp, Flip.None, dx + 4, dy, 24, 40, 8, 8);
+        canvas.drawBitmap(bmp, Flip.None, dx + 4, top, 24, 40, 8, 8);
     }
 
 
@@ -602,7 +629,12 @@ export class GameObject {
 
         case GameObjectType.CylinderDeactivating:
 
-            this.updateFallingCylinder(somethingMoving, terrain, prog);
+            this.animateFallingCylinder(somethingMoving, terrain, prog);
+            break;
+
+        case GameObjectType.RisingPlatform:
+
+            this.animateRisingPlatform(prog);
             break;
     
         default:
@@ -651,9 +683,10 @@ export class GameObject {
             canvas.drawBitmap(bmp, Flip.None, dx + 4, dy + 10, 24, 40, 8, 8);
             break;
 
+        case GameObjectType.RisingPlatform:
         case GameObjectType.RisenPlatform:
 
-            this.drawRisenPlatform(canvas, bmp, dx, dy);
+            this.drawRisingPlatform(canvas, bmp, dx, dy);
             break;
 
         default:
@@ -717,7 +750,7 @@ export class GameObject {
 
     public objectCollision(o : GameObject, terrain : Terrain, prog : ProgramInterface) : void {
 
-        if (!this.exists || !o.exists || this.type != GameObjectType.Slime) {
+        if (!this.exists || !o.exists) {
 
             return;
         }
@@ -726,7 +759,7 @@ export class GameObject {
 
         case GameObjectType.Gem:
 
-            if (this.targetPos.equals(o.targetPos)) {
+            if (this.type == GameObjectType.Slime && this.targetPos.equals(o.targetPos)) {
 
                 this.spawnGemParticles();
                 o.kill(false);
@@ -737,7 +770,8 @@ export class GameObject {
 
         case GameObjectType.Cylinder:
 
-            if (this.basePos.x == o.basePos.x && 
+            if (this.type == GameObjectType.Slime &&
+                this.basePos.x == o.basePos.x && 
                 this.basePos.z == o.basePos.z && 
                 this.basePos.y == o.basePos.y + 1) {
 
@@ -750,13 +784,14 @@ export class GameObject {
 
             if (this.targetPos.equals(o.targetPos)) {
             
-                // TODO: A sound!
+                prog.audio.playSound(prog.assets.getSound(SoundIndex.Rise), 0.80);
 
-                o._type = GameObjectType.RisenPlatform;
+                o._type = GameObjectType.RisingPlatform;
+                o.moveTimer = 1.0;
                 this.moveUp();
 
-                terrain.markObject(this.basePos.x, this.basePos.y - 1, this.basePos.z, o);
-                terrain.markObject(this.basePos.x, this.basePos.y, this.basePos.z, this);
+                terrain.markObject(o.basePos.x, o.basePos.y, o.basePos.z, o);
+                // terrain.markObject(this.basePos.x, this.basePos.y, this.basePos.z, this);
             }
             break;
 

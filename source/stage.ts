@@ -184,6 +184,11 @@ export class Stage {
                 const o2 : GameObject = this.objects[j];
                 o.objectCollision(o2, this.terrain, prog);
                 o2.objectCollision(o, this.terrain, prog);
+
+                if (o.isMoving() || o2.isMoving()) {
+
+                    this.anythingMoving = true;
+                }
             }
         }
     } 
@@ -251,6 +256,11 @@ export class Stage {
         if (!this.anythingMoving && wasAnythingMoving) {
 
             this.postprocessObjects(prog);
+            if (this.anythingMoving) {
+
+                return;
+            }
+
             this.stateBuffer.pushState(this.activeState);
             this.refreshState();
         }
