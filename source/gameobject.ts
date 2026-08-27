@@ -828,8 +828,8 @@ export class GameObject {
     public isSolid() : boolean {
 
         // This'll do for now...
-        return this.type != GameObjectType.Gem && 
-            this.type != GameObjectType.RisingPlatformDeactivated;
+        return this._type != GameObjectType.Gem && 
+            this._type != GameObjectType.RisingPlatformDeactivated;
     }
     
 }

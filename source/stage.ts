@@ -107,6 +107,11 @@ export class Stage {
         this.terrain.flush(true);
         for (const o of this.objects) {
 
+            if (!o.exists) {
+
+                continue;
+            }
+
             const p : Vector = o.logicalPos;
             this.terrain.markObject(p.x, p.y, p.z, o);
         }

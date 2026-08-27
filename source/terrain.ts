@@ -222,7 +222,7 @@ export class Terrain {
     }
 
  
-    public flush(flushObjectPosition : boolean = false) : void {
+    public flush(flushObjectPositions : boolean = false) : void {
 
         // Using for ( ... in ...) makes Closure give warnings
         for (let i : number = 0; i < this.shadowActive.length; ++ i) {
@@ -230,7 +230,7 @@ export class Terrain {
             this.shadowActive[i] = false;
         }
 
-        if (flushObjectPosition) {
+        if (flushObjectPositions) {
             
             for (let i : number = 0; i < this.objectPositions.length; ++ i) {
 
