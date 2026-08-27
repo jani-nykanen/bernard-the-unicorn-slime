@@ -125,7 +125,7 @@ export class GameObject {
 
         if (this.type == GameObjectType.Boulder) {
 
-            if (!terrain.isSlimeNearby(x - dirx, y, z - dirz, terrain.heightAt(x, z)) ||
+            if (!terrain.isSlimeNearby(x - dirx, y, z - dirz, terrain.firstSolidTileHeightBelow(x, y, z, this._type)) ||
                 terrain.objectAt(x, y + 1, z) !== null) {
 
                 return false;
@@ -365,6 +365,11 @@ export class GameObject {
         if (!somethingMoving) {
 
             return;
+        }
+
+        if (this.moveTimer <= 0.0) {
+
+            prog.audio.playSound(prog.assets.getSound(SoundIndex.CylinderFall), 0.80);
         }
 
         this.moveTimer += FALL_SPEED*prog.step;

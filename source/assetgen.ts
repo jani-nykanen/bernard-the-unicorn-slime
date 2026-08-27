@@ -212,11 +212,21 @@ export const createSounds = (audio : AudioPlayer, assets : AssetManager) : void 
 
     assets.addSound(SoundIndex.Rise, 
         audio.createSound(
-            [80,  4, 0.50,
-            128, 3, 0.80,
-            192, 2, 0.70,
-            288, 12, 0.60], 
-            0.80,
-            OscType.Sawtooth, 
-            Ramp.Exponential)!);  
+        [80,  4, 0.50,
+        128, 3, 0.80,
+        192, 2, 0.70,
+        288, 12, 0.60], 
+        0.80,
+        OscType.Sawtooth, 
+        Ramp.Exponential)!);  
+    
+    assets.addSound(SoundIndex.CylinderFall, 
+        audio.createSound(
+        [224,  6, 0.50,
+        192, 4, 0.80,
+        128, 2, 0.70,
+        80, 6, 0.60], 
+        0.60,
+        OscType.Sawtooth, 
+        Ramp.Exponential)!);
 }

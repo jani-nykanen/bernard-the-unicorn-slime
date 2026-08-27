@@ -155,7 +155,8 @@ export class Terrain {
     }
 
 
-    public checkObjectBelow(x : number, y : number, z : number) : GameObject | null {
+    public checkObjectBelow(x : number, y : number, z : number, 
+        preventType : GameObjectType = GameObjectType.Unknown) : GameObject | null {
 
         if (this.outOfBounds(x, y, z)) {
 
@@ -168,7 +169,7 @@ export class Terrain {
         for (let dy : number = y - 1; dy > height; -- dy) {
 
             const o : GameObject | null = this.objectPositions[dy*area + offset] ?? null;
-            if (o !== null) {
+            if (o !== null && o.type != preventType) {
 
                 return o;
             }
@@ -200,9 +201,10 @@ export class Terrain {
     }
 
 
-    public firstSolidTileHeightBelow(x : number, y : number, z : number) : number {
+    public firstSolidTileHeightBelow(x : number, y : number, z : number, 
+        preventType : GameObjectType = GameObjectType.Unknown) : number {
 
-        const o : GameObject | null = this.checkObjectBelow(x, y, z);
+        const o : GameObject | null = this.checkObjectBelow(x, y, z, preventType);
         if (o?.isSolid() !== true) {
 
             return this.heightAt(x, z);

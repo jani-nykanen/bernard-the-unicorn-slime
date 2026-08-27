@@ -28,4 +28,5 @@ export const enum SoundIndex {
     Select = 8,
     Accept = 9,
     Rise = 10,
+    CylinderFall = 11,
 }
