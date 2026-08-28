@@ -145,8 +145,8 @@ export class Menu {
         const dw : number = this.width*8 + PADDING_X*2;
         const dh : number = this.height*FONT_YOFF + PADDING_Y*2;
 
-        const dx : number = canvas.width/2 - dw/2;
-        const dy : number = canvas.height/2 - dh/2;
+        const dx : number = canvas.width/2 - dw/2 + xoff;
+        const dy : number = canvas.height/2 - dh/2 + yoff;
 
         const bmpFontWhite : Bitmap = assets.getBitmap(BitmapIndex.FontWhite)!;
         const bmpFontBlack : Bitmap = assets.getBitmap(BitmapIndex.FontBlack)!;
@@ -167,8 +167,8 @@ export class Menu {
             const b : MenuButton = this.buttons[i];
             const font : Bitmap = isCurrent ? bmpFontBlack : bmpFontWhite;
 
-            const x : number = dx + xoff + PADDING_X;
-            const y : number = dy + yoff + PADDING_Y + i*FONT_YOFF + 2;
+            const x : number = dx + PADDING_X;
+            const y : number = dy + PADDING_Y + i*FONT_YOFF + 2;
 
             if (isCurrent) {
 

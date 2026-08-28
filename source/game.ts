@@ -42,7 +42,7 @@ export class Game implements Scene {
     }
 
 
-    private initializeLevel() : void {
+    private initializeLevel(prog : ProgramInterface) : void {
         
         this.cutsceneStarted = false;
         this.cutsceneTimer = 0.0;
@@ -50,20 +50,24 @@ export class Game implements Scene {
         this.cameraPos = 0.0;
 
         this.stage = new Stage(LEVEL_DATA[this.levelIndex]);
-        // Yes, pause menu needs to be recreated each time..
-        // TODO: Maybe do not recreate the whole Stage object each
+        // Yes, pause menu needs to be recreated each time to make
+        // undo and restart work properly.
+        // TODO: Maybe do not recreate the whole stage object each
         // time...?
         this.pauseMenu = createPauseMenu(this.stage, () => {
 
-            // TODO: Quit
+            prog.transition.activate(true, 1.0/30.0, (prog : ProgramInterface) : void => {
+
+                prog.changeScene("title");
+            })
         });
     }
 
 
-    private nextLevel() : void {
+    private nextLevel(prog : ProgramInterface) : void {
 
         ++ this.levelIndex;
-        this.initializeLevel();
+        this.initializeLevel(prog);
     }
 
 
@@ -106,7 +110,7 @@ export class Game implements Scene {
 
                 prog.transition.activate(true, 1.0/30.0, (prog : ProgramInterface) : void => {
 
-                    this.nextLevel();
+                    this.nextLevel(prog);
                 });
             }
             break;
@@ -221,9 +225,7 @@ export class Game implements Scene {
 
             this.levelIndex = param;
         }
-        this.initializeLevel();
-
-        prog.transition.activate(false, 1.0/30.0);
+        this.initializeLevel(prog);
     }
 
 
@@ -277,5 +279,11 @@ export class Game implements Scene {
             this.pauseMenu!.draw(canvas, assets);
         }
         this.drawHeaderText(canvas, assets);
+    }
+
+
+    public onChange() : SceneChangeParameter {
+        
+        return 1;
     }
 }

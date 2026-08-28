@@ -80,6 +80,34 @@ export class AssetManager {
     }
 
 
+    public convertMonochrome(id : number, source : Bitmap, palette : number[], 
+        alphaThreshold : number) : void {
+
+        const output : HTMLCanvasElement = document.createElement("canvas");
+        output.width = source.width;
+        output.height = source.height;
+        const ctx : CanvasRenderingContext2D = output.getContext("2d")!;
+
+        ctx.drawImage(source, 0, 0);
+
+        const imageData : ImageData = ctx.getImageData(0, 0, source.width, source.height);
+        const pixels : ImageDataArray = imageData.data;
+
+        for (let i : number = 0; i < pixels.length/4; ++ i) {
+
+            for (let j : number = 0; j < 3; ++ j) {
+
+                pixels[i*4 + j] = palette[j];
+            }
+
+            pixels[i*4 + 3] = pixels[i*4 + 3] < alphaThreshold ? 0 : 255;
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+        this.bitmaps.set(id, output);
+    }
+
+
     public getBitmap(id : number) : Bitmap | null {
 
         return this.bitmaps.get(id) ?? null;

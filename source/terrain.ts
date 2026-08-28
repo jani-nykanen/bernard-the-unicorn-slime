@@ -205,7 +205,7 @@ export class Terrain {
         preventType : GameObjectType = GameObjectType.Unknown) : number {
 
         const o : GameObject | null = this.checkObjectBelow(x, y, z, preventType);
-        if (o?.isSolid() !== true) {
+        if (o?.isSolid(preventType) !== true) {
 
             return this.heightAt(x, z);
         }

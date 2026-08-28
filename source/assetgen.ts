@@ -94,7 +94,34 @@ const generateRainbow = () : Bitmap => {
 }
 
 
+
+export const generateLogo = () : Bitmap => {
+
+    const WIDTH : number = 144;
+    const HEIGHT : number = 64;
+
+    const canvas : HTMLCanvasElement = document.createElement("canvas")!;
+    canvas.width = WIDTH;
+    canvas.height = HEIGHT; 
+
+    const ctx : CanvasRenderingContext2D = canvas.getContext("2d")!;
+    ctx.imageSmoothingEnabled = false;
+
+    const dx : number = canvas.width/2;
+    ctx.textAlign = "center";
+    ctx.font = "bold 16px Arial";
+    ctx.fillText("BERNARD THE", dx, 16);
+    ctx.font = "bold 28px Arial";
+    ctx.fillText("UNICORN", dx, 40);
+    ctx.fillText("SLIME", dx, 64);
+
+    return canvas;
+}
+
+
 export const generateBitmaps = (assets : AssetManager) : void => {
+
+    const LOGO_ALPHA_THRESHOLD : number = 127;
 
     // Base tileset
     assets.applyPalette(
@@ -109,10 +136,16 @@ export const generateBitmaps = (assets : AssetManager) : void => {
             [[0, 0, 0], [0, 0, 0], [0, 0, 0], MASTER_PALETTE[i]], fontAlphaMask);
     }
     
-    // Moon
+    // Misc
     assets.addBitmap(BitmapIndex.Moon, generateMoon());
-    // Rainbow
     assets.addBitmap(BitmapIndex.Rainbow, generateRainbow());
+
+    // Logo
+    const logoRaw : Bitmap = generateLogo();
+    assets.convertMonochrome(BitmapIndex.LogoBlack, logoRaw, 
+        MASTER_PALETTE[0], LOGO_ALPHA_THRESHOLD);
+    assets.convertMonochrome(BitmapIndex.LogoWhite, logoRaw, 
+        MASTER_PALETTE[3], LOGO_ALPHA_THRESHOLD);
 }
 
 

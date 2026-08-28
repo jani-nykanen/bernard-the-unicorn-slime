@@ -139,14 +139,14 @@ export class GameObject {
         }
 
         let objectInFront : GameObject | null = terrain.objectAt(dx, y, dz);
-        if (objectInFront?.isSolid() === true) {
+        if (objectInFront?.isSolid(this._type) === true) {
             
             return false;
         }
 
         let dy : number = height;
         const objectBelow : GameObject | null = terrain.checkObjectBelow(dx, y, dz);
-        if (objectBelow?.isSolid() === true) {
+        if (objectBelow?.isSolid(this._type) === true) {
 
             dy = objectBelow.logicalPos.y + 1;
         }
@@ -830,10 +830,10 @@ export class GameObject {
     }
 
 
-    public isSolid() : boolean {
+    public isSolid(ownType : GameObjectType) : boolean {
 
         // This'll do for now...
-        return this._type != GameObjectType.Gem && 
+        return (this._type != GameObjectType.Gem || ownType == GameObjectType.Boulder) && 
             this._type != GameObjectType.RisingPlatformDeactivated;
     }
     

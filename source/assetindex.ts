@@ -6,6 +6,8 @@ export const enum BitmapIndex {
     Base = 1,
     Moon = 2,
     Rainbow = 3,
+    LogoBlack = 4,
+    LogoWhite = 5,
 
     FontRaw = 5,
     FontBlack = 6,
