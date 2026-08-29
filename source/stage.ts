@@ -308,8 +308,8 @@ export class Stage {
 
         const bmpBase : Bitmap = assets.getBitmap(BitmapIndex.Base)!;
 
-        const left : number = canvas.width/2;
-        const top : number = canvas.height/2 + this.height*4;
+        const left : number = canvas.width/2 + (this.depth - this.width)*6;
+        const top : number = canvas.height/2 + this.height*4 - Math.max(0, Math.max(this.depth, this.width) - 5)*8;
 
         canvas.move(left, top);
 

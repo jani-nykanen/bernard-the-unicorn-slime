@@ -839,7 +839,7 @@ export class GameObject {
                 this.basePos.y == o.basePos.y + 1) {
 
                 o.breakEgg(terrain, prog);
-                terrain.markObject(this.basePos.x, this.basePos.y, this.basePos.z, this);
+                terrain.markObject(this.basePos.x, this.basePos.y, this.basePos.z, null);
                 terrain.markObject(o.basePos.x, o.basePos.y, o.basePos.z, null);
                 this.moveDown();
             }
