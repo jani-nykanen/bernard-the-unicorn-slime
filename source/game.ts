@@ -33,7 +33,7 @@ export class Game implements Scene {
     private cutscenePhase : number = 0;
     private cutsceneTimer : number = 0;
 
-    private levelIndex : number = 0;
+    private levelIndex : number = 9;
 
 
     constructor() {

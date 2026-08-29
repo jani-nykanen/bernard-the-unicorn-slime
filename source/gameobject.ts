@@ -24,6 +24,7 @@ export const enum GameObjectType {
     RisingPlatformDeactivated = 6,
     RisingPlatform = 7,
     RisenPlatform = 8,
+    Egg = 9,
 }
 
 
@@ -123,7 +124,7 @@ export class GameObject {
         const dx : number = x + dirx;
         const dz : number = z + dirz;
 
-        if (this.type == GameObjectType.Boulder) {
+        if (this.isPushable()) {
 
             if (!terrain.isSlimeNearby(x - dirx, y, z - dirz, terrain.firstSolidTileHeightBelow(x, y, z, this._type)) ||
                 terrain.objectAt(x, y + 1, z) !== null) {
@@ -168,7 +169,7 @@ export class GameObject {
         terrain.markObject(x, y, z, null);
         // terrain.markObject(dx, dy, dz, this);
 
-        if (this.type == GameObjectType.Boulder) {
+        if (this.isPushable()) {
 
             prog.audio.playSound(prog.assets.getSound(SoundIndex.Push), 0.80);
         }
@@ -226,7 +227,7 @@ export class GameObject {
         const JUMP_HEIGHT : number = 0.675;
 
         if (this._type != GameObjectType.Slime &&
-            this._type != GameObjectType.Boulder) {
+            !this.isPushable()) {
 
             return;
         }
@@ -279,7 +280,14 @@ export class GameObject {
         if (this.renderPos.y <= this.targetPos.y) {
 
             this.terminateMovement(terrain);
-            if (this.type == GameObjectType.Boulder) {
+            if (this.isPushable()) {
+
+                if (this._type == GameObjectType.Egg) {
+
+                    // TODO: Particles!
+                    terrain.markObject(this.basePos.x, this.basePos.y, this.basePos.z, null);
+                    this._exists = false;
+                }
 
                 prog.audio.playSound(prog.assets.getSound(SoundIndex.Fall), 0.80);
             }
@@ -574,7 +582,7 @@ export class GameObject {
         }
 
         if (this.type != GameObjectType.Slime && 
-            this.type != GameObjectType.Boulder) {
+            !this.isPushable()) {
 
             return false;
         }
@@ -692,6 +700,11 @@ export class GameObject {
         case GameObjectType.RisenPlatform:
 
             this.drawRisingPlatform(canvas, bmp, dx, dy);
+            break;
+
+        case GameObjectType.Egg:
+
+            canvas.drawBitmap(bmp, Flip.None, dx, dy, 16, 80, 16, 16);
             break;
 
         default:
@@ -833,8 +846,16 @@ export class GameObject {
     public isSolid(ownType : GameObjectType) : boolean {
 
         // This'll do for now...
-        return (this._type != GameObjectType.Gem || ownType == GameObjectType.Boulder) && 
+        return (this._type != GameObjectType.Gem || 
+                ownType == GameObjectType.Boulder || 
+                ownType == GameObjectType.Egg) && 
             this._type != GameObjectType.RisingPlatformDeactivated;
+    }
+
+
+    public isPushable() : boolean {
+
+        return this._type == GameObjectType.Boulder || this._type == GameObjectType.Egg;
     }
     
 }

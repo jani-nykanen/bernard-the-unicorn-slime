@@ -27,7 +27,7 @@ export const initKeyConfig = (keyb : Keyboard) : void => {
 
     keyb.addAction(ActionIndex.Select, ["Enter", "Space" ]);
     keyb.addAction(ActionIndex.Back, ["Backspace", "Escape"]);
-    keyb.addAction(ActionIndex.Pause, ["Escape"]);
+    keyb.addAction(ActionIndex.Pause, ["Enter", "Escape"]);
 
     keyb.addAction(ActionIndex.Undo, ["KeyZ", "Backspace"]);
     keyb.addAction(ActionIndex.Reset, ["KeyR"]);

@@ -120,9 +120,6 @@ export class Stage {
 
     private createObjects(objectData : number[]) : void {
 
-        const MOVING_OBJECT_FIRST : number = 1;
-        const MOVING_OBJECT_LAST : number = 8;
-
         for (let z : number = 0; z < this.depth; ++ z) {
 
             for (let x : number = 0; x < this.width; ++ x) {
@@ -134,14 +131,10 @@ export class Stage {
                     continue;
                 }
 
-                // Moving objects
-                if (objectID >= MOVING_OBJECT_FIRST && objectID <= MOVING_OBJECT_LAST) {
-                
-                    const o : GameObject = new GameObject(x, y, z, objectID, this.particles);
-                    this.objects.push(o);
-                    this.depthBuffer.pushObject(o);
-                    this.terrain.markObject(x, y, z, o);
-                }
+                const o : GameObject = new GameObject(x, y, z, objectID, this.particles);
+                this.objects.push(o);
+                this.depthBuffer.pushObject(o);
+                this.terrain.markObject(x, y, z, o);
             }
         }
     }
