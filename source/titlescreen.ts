@@ -6,12 +6,15 @@ import { Align, Flip, RenderTarget } from "./rendertarget.js";
 import { Scene, SceneChangeParameter } from "./scene.js";
 import { BitmapIndex, SoundIndex } from "./assetindex.js";
 import { Menu, MenuButton } from "./menu.js";
+import { ActionIndex } from "./keyconfig.js";
+import { InputFlag } from "./keyboard.js";
 
 
 export class TitleScreen implements Scene {
 
 
     private waveTimer : number = 0.0;
+    private pressStartTimer : number = 1.0;
     private menu : Menu;
 
     private startNewGame : boolean = false;
@@ -42,7 +45,7 @@ export class TitleScreen implements Scene {
             return false;
         }),
 
-        ], true, false);
+        ], false, false);
     }
 
     
@@ -81,6 +84,7 @@ export class TitleScreen implements Scene {
         const SUBTITLE_OFFSET_Y : number = 72;
         const SUBTITLE_WAVE_AMPLITUDE : number = 2;
         const SUBTITLE_PERIOD : number = Math.PI*3;
+        const PRESS_ENTER_TEXT : string = "PRESS ENTER";
 
         const bmpLogoBlack : Bitmap = assets.getBitmap(BitmapIndex.LogoBlack)!;
         const bmpLogoWhite : Bitmap = assets.getBitmap(BitmapIndex.LogoWhite)!;
@@ -92,6 +96,10 @@ export class TitleScreen implements Scene {
         const subtitleX : number = canvas.width/2;
         const subtitleY : number = dy + SUBTITLE_OFFSET_Y;
 
+        const pressEnterX : number = subtitleX;
+        const pressEnterY : number = canvas.height - 32;
+        const drawPressEnter : boolean = this.pressStartTimer < 0.5;
+
         for (let i : number = -1; i <= 1; ++ i) {
 
             for (let j : number = -1; j <= 2; ++ j) {
@@ -100,12 +108,23 @@ export class TitleScreen implements Scene {
                 canvas.drawText(bmpFontBlack, SUBTITLE, 
                     subtitleX + i, subtitleY + j, Align.Center,
                     SUBTITLE_PERIOD, SUBTITLE_WAVE_AMPLITUDE, this.waveTimer);
+
+                if (drawPressEnter && j < 2) {
+
+                    canvas.drawText(bmpFontBlack, PRESS_ENTER_TEXT, 
+                        pressEnterX + i, pressEnterY + j, Align.Center);
+                }
             }
         }
         canvas.drawBitmap(bmpLogoWhite, Flip.None, dx, dy);
         canvas.drawText(bmpFontWhite, SUBTITLE, 
             subtitleX, subtitleY, Align.Center,
             SUBTITLE_PERIOD, SUBTITLE_WAVE_AMPLITUDE, this.waveTimer);
+        if (drawPressEnter) {
+
+            canvas.drawText(bmpFontWhite, PRESS_ENTER_TEXT, 
+                pressEnterX, pressEnterY, Align.Center);
+        }
     }
 
 
@@ -119,10 +138,20 @@ export class TitleScreen implements Scene {
     public update(prog : ProgramInterface) : void {
         
         const WAVE_SPEED : number = Math.PI*2/120.0;
-
-        this.waveTimer = (this.waveTimer + WAVE_SPEED*prog.step) % (Math.PI*2);
+        const PRESS_ENTER_SPEED : number = 1.0/60.0;
 
         this.menu.update(prog);
+        if (!this.menu.isActive()) {
+                
+            this.pressStartTimer = (this.pressStartTimer + PRESS_ENTER_SPEED*prog.step) % 1.0;
+            if (prog.keyboard.getActionState(ActionIndex.Select).flag == InputFlag.Pressed) {
+
+                prog.audio.playSound(prog.assets.getSound(SoundIndex.Pause), 0.80);
+                this.menu.activate(0);
+            }
+        }
+        
+        this.waveTimer = (this.waveTimer + WAVE_SPEED*prog.step) % (Math.PI*2);
     }
 
 

@@ -15,8 +15,8 @@ window.onload = () : void => (new Program(160, 144, 60, 0.60,
 
         initKeyConfig(prog.keyboard);
 
-        prog.addScene("game", new Game(), true);
-        prog.addScene("title", new TitleScreen());
+        prog.addScene("game", new Game());
+        prog.addScene("title", new TitleScreen(), true);
 
         prog.assets.loadBitmap(BitmapIndex.BaseRaw, "base.png");
         prog.assets.loadBitmap(BitmapIndex.FontRaw, "font.png");

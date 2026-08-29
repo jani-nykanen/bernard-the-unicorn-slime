@@ -14,7 +14,7 @@ export const enum ActionIndex {
     
     Undo = 7,
     Reset = 8,
-    ChangeActive = 9
+    ChangeActive = 9,
 };
 
 
