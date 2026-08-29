@@ -284,11 +284,10 @@ export class GameObject {
 
                 if (this._type == GameObjectType.Egg) {
 
-                    // TODO: Particles!
+                    this.spawnParticles(ParticleType.EggPiece);
                     terrain.markObject(this.basePos.x, this.basePos.y, this.basePos.z, null);
                     this._exists = false;
                 }
-
                 prog.audio.playSound(prog.assets.getSound(SoundIndex.Fall), 0.80);
             }
         }
@@ -402,10 +401,11 @@ export class GameObject {
     }
 
 
-    private spawnGemParticles() : void {
+    private spawnParticles(type : ParticleType) : void {
 
         const COUNT : number = 4;
         const LAUNCH_SPEED : number = 2.0;
+        const JUMP_Y : number = -1.0;
 
         const angleStep : number = Math.PI*2.0/4.0;
 
@@ -418,9 +418,9 @@ export class GameObject {
             const angle : number = angleStep/2.0 + angleStep*i;
 
             const speedx : number = Math.cos(angle)*LAUNCH_SPEED;
-            const speedy : number = Math.sin(angle)*LAUNCH_SPEED;
+            const speedy : number = Math.sin(angle)*LAUNCH_SPEED + JUMP_Y;
 
-            nextParticle(this.particles).spawn(ParticleType.Star,
+            nextParticle(this.particles).spawn(type,
                 dx, dy, speedx, speedy);
         }
     }
@@ -779,7 +779,7 @@ export class GameObject {
 
             if (this.type == GameObjectType.Slime && this.targetPos.equals(o.targetPos)) {
 
-                this.spawnGemParticles();
+                this.spawnParticles(ParticleType.Star);
                 o.kill(false);
 
                 prog.audio.playSound(prog.assets.getSound(SoundIndex.Gem), 0.80);

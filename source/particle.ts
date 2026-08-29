@@ -8,6 +8,7 @@ import { Sprite } from "./sprite.js";
 export const enum ParticleType {
 
     Star = 0,
+    EggPiece = 1,
 }
 
 
@@ -40,8 +41,8 @@ export class Particle {
 
     public update(prog : ProgramInterface) : void {
 
-        const MAX_GRAVITY : number = 4.0;
-        const GRAVITY_STEP : number = 0.1; 
+        const MAX_GRAVITY : number = 5.0;
+        const GRAVITY_STEP : number = 0.125; 
         const STAR_FRAME_TIME : number = 6;
 
         if (!this._exists) {
@@ -53,13 +54,14 @@ export class Particle {
 
         case ParticleType.Star:
 
-            this.speed.y = Math.min(MAX_GRAVITY, this.speed.y +  GRAVITY_STEP*prog.step);
             this.sprite.animate(2, 2, 3, STAR_FRAME_TIME, prog.step);
             break;
 
         default:
             break;
         }
+
+        this.speed.y = Math.min(MAX_GRAVITY, this.speed.y +  GRAVITY_STEP*prog.step);
 
         this.pos.x += this.speed.x*prog.step;
         this.pos.y += this.speed.y*prog.step;
@@ -83,6 +85,12 @@ export class Particle {
             return;
         }
 
+        if (this.type == ParticleType.EggPiece) {
+
+            canvas.drawBitmap(bmp, this.sprite.flip, 
+                this.pos.x - 4, this.pos.y - 4, 0, 88, 8, 8);
+            return;
+        }
         this.sprite.draw(canvas, bmp, this.pos.x - 8, this.pos.y - 8);
     }
 
@@ -96,6 +104,12 @@ export class Particle {
         this.speed.setValues(speedx, speedy);
 
         this.sprite.setFrame(2, 2);
+        this.sprite.flip = Flip.None;
+        if (type == ParticleType.EggPiece) {
+
+            this.sprite.flip = speedx > 0 ? Flip.Horizontal : Flip.None;
+            this.sprite.flip |= speedy > 0 ? Flip.Vertical : Flip.None;
+        }
 
         this._exists = true;
     }
