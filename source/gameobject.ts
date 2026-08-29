@@ -217,6 +217,14 @@ export class GameObject {
     }
 
 
+    private breakEgg(terrain : Terrain, prog : ProgramInterface) : void {
+
+        this.spawnParticles(ParticleType.EggPiece);
+        terrain.markObject(this.basePos.x, this.basePos.y, this.basePos.z, null);
+        this._exists = false;
+    }
+
+
     private updateMovement(terrain : Terrain, prog : ProgramInterface) : void {
 
         const BASE_MOVE_SPEED : number = 1.0/12.0;
@@ -284,9 +292,7 @@ export class GameObject {
 
                 if (this._type == GameObjectType.Egg) {
 
-                    this.spawnParticles(ParticleType.EggPiece);
-                    terrain.markObject(this.basePos.x, this.basePos.y, this.basePos.z, null);
-                    this._exists = false;
+                    this.breakEgg(terrain, prog);
                 }
                 prog.audio.playSound(prog.assets.getSound(SoundIndex.Fall), 0.80);
             }
@@ -442,6 +448,18 @@ export class GameObject {
         this.moveTimer = 1.0/8.0;
         this.moving = true;
         this.jumping = false;
+    }
+
+
+    private moveDown() : void {
+
+        -- this.targetPos.y;
+
+        this.moveTimer = 0.0;
+        this.moving = true;
+        this.jumping = false;
+        this.falling = true;
+        this.gravity = 0.1;
     }
 
 
@@ -788,7 +806,7 @@ export class GameObject {
 
         case GameObjectType.Cylinder:
 
-            if (this.type == GameObjectType.Slime &&
+            if (this._type == GameObjectType.Slime &&
                 this.basePos.x == o.basePos.x && 
                 this.basePos.z == o.basePos.z && 
                 this.basePos.y == o.basePos.y + 1) {
@@ -810,6 +828,20 @@ export class GameObject {
 
                 terrain.markObject(o.basePos.x, o.basePos.y, o.basePos.z, o);
                 // terrain.markObject(this.basePos.x, this.basePos.y, this.basePos.z, this);
+            }
+            break;
+            
+        case GameObjectType.Egg:
+
+            if (this._type == GameObjectType.Boulder &&
+                this.basePos.x == o.basePos.x && 
+                this.basePos.z == o.basePos.z && 
+                this.basePos.y == o.basePos.y + 1) {
+
+                o.breakEgg(terrain, prog);
+                terrain.markObject(this.basePos.x, this.basePos.y, this.basePos.z, this);
+                terrain.markObject(o.basePos.x, o.basePos.y, o.basePos.z, null);
+                this.moveDown();
             }
             break;
 
