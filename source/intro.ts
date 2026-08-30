@@ -84,7 +84,7 @@ export class Intro implements Scene {
 
         if (this.phase == 0 && prog.keyboard.anyPressed) {
 
-            prog.audio.playSound(prog.assets.getSound(SoundIndex.Accept), 0.80);
+            prog.audio.playSound(prog.assets.getSound(SoundIndex.Select), 0.80);
             this.fadeTimer = 1.0;
             this.fadingIn = true;
         }
@@ -107,6 +107,18 @@ export class Intro implements Scene {
 
         const dx : number = canvas.width/2 - this.textWidth*4;
         const dy : number = canvas.height/2 - this.textHeight*4;
+
+        if (this.phase == 0) {
+
+            const dw : number = this.textWidth*8;
+            const dh : number = this.textHeight*8;
+
+            canvas.setDrawColor(...MASTER_PALETTE[fontIndex]);
+            canvas.fillRect(dx - 4, dy - 4, dw + 8, dh + 8);
+
+            canvas.setDrawColor(...MASTER_PALETTE[0]);
+            canvas.fillRect(dx - 3, dy - 3, dw + 6, dh + 6);
+        }
 
         canvas.drawText(font, this.text, dx, dy);
     }

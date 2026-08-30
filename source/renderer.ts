@@ -30,17 +30,24 @@ export class Renderer {
         const canvasRatio : number = this.canvas.width/this.canvas.height;
         const targetRatio : number = width/height;
 
-        let newWidth : number = width;
-        let newHeight : number = height;
+        let scaleFactor : number = 1.0;
 
         if (targetRatio >= canvasRatio) {
 
-            newWidth = Math.round(newHeight*canvasRatio);
+            scaleFactor = height/this.canvas.height;
         }
         else {
 
-            newHeight = Math.round(newWidth/canvasRatio);
+            scaleFactor = width/this.canvas.width;
         }
+
+        if (scaleFactor >= 1.0) {
+
+            scaleFactor = Math.floor(scaleFactor);
+        }
+
+        const newWidth = this.canvas.width*scaleFactor;
+        const newHeight = this.canvas.height*scaleFactor;
 
         const cornerx : number = (width/2 - newWidth/2) | 0;
         const cornery : number  = (height/2 - newHeight/2) | 0;
