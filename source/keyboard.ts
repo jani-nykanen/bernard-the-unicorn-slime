@@ -56,48 +56,11 @@ export class Keyboard {
     static _defaultState : InputState = defaultState();
 
 
-    constructor(createAudioContextEvent : (ctx : AudioContext | null) => void) {
+    constructor() {
 
         this.states = new Map<string, InputState> ();
         this.prevent = new Set<string> ();
         this.actions = new Map<number, Action> ();
-
-        // TODO: Verify that e.timestamp works as intended (if not, change
-        // to Date.now())
-        window.addEventListener("keydown", (e : KeyboardEvent) : void  => {
-
-            if (!this.audioContextCreated && e.code != "Escape") {
-
-                let ctx : AudioContext | null = null
-                try {
-
-                    ctx = new AudioContext();
-                }
-                catch(e) {
-
-                    ctx = null;
-                };
-
-                createAudioContextEvent(ctx);
-                this.audioContextCreated = true;
-                return;
-            }
-
-            this.keyEvent(e.code, true, e.timeStamp);
-            if (this.prevent.has(e.code)) {
-
-                e.preventDefault();
-            }
-            
-        });
-        window.addEventListener("keyup", (e : KeyboardEvent) : void  => {
-
-           this.keyEvent(e.code, false, e.timeStamp);
-            if (this.prevent.has(e.code)) {
-
-                e.preventDefault();
-            }
-        }); 
     }
 
 
@@ -193,5 +156,44 @@ export class Keyboard {
             return Keyboard._defaultState;
         }
         return a.state;
+    }
+
+
+    public setListeners(createAudioContextEvent : (ctx : AudioContext | null) => void) : void {
+
+        window.addEventListener("keydown", (e : KeyboardEvent) : void  => {
+
+            if (!this.audioContextCreated && e.code != "Escape") {
+
+                let ctx : AudioContext | null = null
+                try {
+
+                    ctx = new AudioContext();
+                }
+                catch(e) {
+
+                    ctx = null;
+                };
+
+                createAudioContextEvent(ctx);
+                this.audioContextCreated = true;
+                return;
+            }
+
+            this.keyEvent(e.code, true, e.timeStamp);
+            if (this.prevent.has(e.code)) {
+
+                e.preventDefault();
+            }
+            
+        });
+        window.addEventListener("keyup", (e : KeyboardEvent) : void  => {
+
+           this.keyEvent(e.code, false, e.timeStamp);
+            if (this.prevent.has(e.code)) {
+
+                e.preventDefault();
+            }
+        }); 
     }
 }

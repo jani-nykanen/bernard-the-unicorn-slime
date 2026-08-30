@@ -32,7 +32,7 @@ export class TitleScreen implements Scene {
             this.startNewGame = true;
             prog.transition.activate(true, 1.0/30.0, (prog : ProgramInterface) : void => {
 
-                prog.changeScene("game");
+                prog.changeScene("intro");
             });
             return false;
         }),
@@ -147,6 +147,11 @@ export class TitleScreen implements Scene {
         const WAVE_SPEED : number = Math.PI*2/120.0;
         const PRESS_ENTER_SPEED : number = 1.0/60.0;
         const ENTRANCE_SPEED : number = 1.0/45.0;
+
+        if (prog.transition.active) {
+
+            return;
+        }
 
         this.waveTimer = (this.waveTimer + WAVE_SPEED*prog.step) % (Math.PI*2);
 

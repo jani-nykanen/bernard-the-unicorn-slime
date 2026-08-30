@@ -73,7 +73,8 @@ export class Game implements Scene {
 
         if (this.levelIndex == MAX_LEVEL_INDEX) {
 
-            throw new Error("TODO: Implement ending.");
+            prog.changeScene("intro");
+            return;
         }
 
         ++ this.levelIndex;

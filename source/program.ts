@@ -79,10 +79,7 @@ export class Program implements ProgramInterface {
         this.waitInputRenderEvent = waitInputRenderEvent;
         this.onAudioPreparedEvent = onAudioPrepared;
 
-        this.keyboard = new Keyboard((ctx : AudioContext | null) : void => {
-
-            this.audio.setContext(ctx);
-        });
+        this.keyboard = new Keyboard();
         this.renderer = new Renderer(canvasWidth, canvasHeight);
         this.scenes = new Map<string, Scene> ();
         this.assets = new AssetManager();
@@ -134,6 +131,10 @@ export class Program implements ProgramInterface {
             // reason to make it work this way in the past?)
             if (loaded && !this.initialized) {
                 
+                this.keyboard.setListeners((ctx : AudioContext | null) : void => {
+
+                    this.audio.setContext(ctx);
+                });
                 this.onLoadEvent?.(this);
                 this.activeScene?.init(null, this);
                 this.initialized = true;

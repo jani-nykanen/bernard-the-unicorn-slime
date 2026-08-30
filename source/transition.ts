@@ -78,4 +78,9 @@ export class Transition {
         canvas.fillCircleOutside(radius);
     }
 
+
+    public deactivate() : void {
+
+        this._active = false;
+    }
 }

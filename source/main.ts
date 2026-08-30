@@ -7,6 +7,7 @@ import { createSounds, generateBitmaps } from "./assetgen.js";
 import { Align, RenderTarget } from "./rendertarget.js";
 import { AssetManager } from "./assetmanager.js";
 import { TitleScreen } from "./titlescreen.js";
+import { Intro } from "./intro.js";
 
 
 window.onload = () : void => (new Program(160, 144, 60, 0.60,
@@ -16,6 +17,7 @@ window.onload = () : void => (new Program(160, 144, 60, 0.60,
         initKeyConfig(prog.keyboard);
 
         prog.addScene("game", new Game());
+        prog.addScene("intro", new Intro());
         prog.addScene("title", new TitleScreen(), true);
 
         prog.assets.loadBitmap(BitmapIndex.BaseRaw, "base.png");
