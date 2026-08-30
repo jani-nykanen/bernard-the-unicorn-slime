@@ -8,6 +8,7 @@ import { BitmapIndex, SoundIndex } from "./assetindex.js";
 import { Menu, MenuButton } from "./menu.js";
 import { ActionIndex } from "./keyconfig.js";
 import { InputFlag } from "./keyboard.js";
+import { loadData } from "./savedata.js";
 
 
 export class TitleScreen implements Scene {
@@ -16,6 +17,7 @@ export class TitleScreen implements Scene {
     private waveTimer : number = 0.0;
     private pressStartTimer : number = 1.0;
     private menu : Menu;
+    private entranceTimer : number = 1.0;
 
     private startNewGame : boolean = false;
 
@@ -85,6 +87,9 @@ export class TitleScreen implements Scene {
         const SUBTITLE_WAVE_AMPLITUDE : number = 2;
         const SUBTITLE_PERIOD : number = Math.PI*3;
         const PRESS_ENTER_TEXT : string = "PRESS ENTER";
+        const ENTRACE_OFFSET : number = -96;
+
+        canvas.moveTo(0, ENTRACE_OFFSET*this.entranceTimer);
 
         const bmpLogoBlack : Bitmap = assets.getBitmap(BitmapIndex.LogoBlack)!;
         const bmpLogoWhite : Bitmap = assets.getBitmap(BitmapIndex.LogoWhite)!;
@@ -125,13 +130,15 @@ export class TitleScreen implements Scene {
             canvas.drawText(bmpFontWhite, PRESS_ENTER_TEXT, 
                 pressEnterX, pressEnterY, Align.Center);
         }
+
+        canvas.moveTo();
     }
 
 
 
     public init(param : SceneChangeParameter, prog : ProgramInterface): void {
         
-        this.menu.setCursor(param === null ? 0 : 1);
+        this.menu.setCursor(param === null || loadData() == 0 ? 0 : 1);
     }
 
 
@@ -139,6 +146,15 @@ export class TitleScreen implements Scene {
         
         const WAVE_SPEED : number = Math.PI*2/120.0;
         const PRESS_ENTER_SPEED : number = 1.0/60.0;
+        const ENTRANCE_SPEED : number = 1.0/45.0;
+
+        this.waveTimer = (this.waveTimer + WAVE_SPEED*prog.step) % (Math.PI*2);
+
+        if (this.entranceTimer > 0.0) {
+
+            this.entranceTimer = Math.max(0.0, this.entranceTimer - ENTRANCE_SPEED*prog.step);
+            return;
+        }
 
         this.menu.update(prog);
         if (!this.menu.isActive()) {
@@ -149,9 +165,7 @@ export class TitleScreen implements Scene {
                 prog.audio.playSound(prog.assets.getSound(SoundIndex.Pause), 0.80);
                 this.menu.activate(0);
             }
-        }
-        
-        this.waveTimer = (this.waveTimer + WAVE_SPEED*prog.step) % (Math.PI*2);
+        }        
     }
 
 
@@ -167,9 +181,13 @@ export class TitleScreen implements Scene {
     }
 
 
-    public onChange?() : SceneChangeParameter {
+    public onChange() : SceneChangeParameter {
         
-        return null;
+        if (this.startNewGame) {
+
+            return 0;
+        }
+        return loadData();
     }
 
 }

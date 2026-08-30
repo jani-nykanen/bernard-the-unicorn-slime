@@ -11,6 +11,8 @@ import { createPauseMenu } from "./pausemenu.js";
 import { ActionIndex } from "./keyconfig.js";
 import { InputFlag } from "./keyboard.js";
 import { LEVEL_DATA } from "./leveldata.js";
+import { clamp } from "./math.js";
+import { saveData } from "./savedata.js";
 
 
 const STAR_POSITIONS : number[][][] = 
@@ -19,6 +21,9 @@ const STAR_POSITIONS : number[][][] =
     [[5, 4], [4, 10], [16, 9]],
     [[8, 2], [18, 7]]
 ]
+
+
+const MAX_LEVEL_INDEX : number = 12;
 
 
 export class Game implements Scene {
@@ -66,7 +71,14 @@ export class Game implements Scene {
 
     private nextLevel(prog : ProgramInterface) : void {
 
+        if (this.levelIndex == MAX_LEVEL_INDEX) {
+
+            throw new Error("TODO: Implement ending.");
+        }
+
         ++ this.levelIndex;
+        saveData(this.levelIndex);
+
         this.initializeLevel(prog);
     }
 
@@ -223,7 +235,7 @@ export class Game implements Scene {
         
         if (typeof(param) === "number") {
 
-            this.levelIndex = param;
+            this.levelIndex = clamp(param, 0, MAX_LEVEL_INDEX);
         }
         this.initializeLevel(prog);
     }

@@ -30,15 +30,16 @@ window.onload = () : void => (new Program(160, 144, 60, 0.60,
     // Draw "wait for input" screen
     (canvas : RenderTarget, assets : AssetManager) : void => {
 
-        canvas.setDrawColor(...MASTER_PALETTE[3]);
+        canvas.setDrawColor(...MASTER_PALETTE[0]);
         canvas.clear();
 
-        canvas.drawText(assets.getBitmap(BitmapIndex.FontBlack)!, "PRESS ANY KEY", 
+        canvas.drawText(assets.getBitmap(BitmapIndex.FontWhite)!, "PRESS ANY KEY", 
             canvas.width/2, canvas.height/2 - 4, Align.Center);
     },
     // On audio prepared
     (prog : ProgramInterface) : void => {
 
         createSounds(prog.audio, prog.assets);
+        prog.transition.activate(false, 1.0/30.0);
 
     })).run();
