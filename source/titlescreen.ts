@@ -20,6 +20,7 @@ export class TitleScreen implements Scene {
     private entranceTimer : number = 1.0;
 
     private startNewGame : boolean = false;
+    private savedLevel : number = 0;
 
 
     constructor() {
@@ -138,7 +139,8 @@ export class TitleScreen implements Scene {
 
     public init(param : SceneChangeParameter, prog : ProgramInterface): void {
         
-        this.menu.setCursor(param === null || loadData() == 0 ? 0 : 1);
+        this.savedLevel = loadData();
+        this.menu.setCursor(param === null || this.savedLevel == 0 ? 0 : 1);
     }
 
 
@@ -168,7 +170,7 @@ export class TitleScreen implements Scene {
             if (prog.keyboard.getActionState(ActionIndex.Select).flag == InputFlag.Pressed) {
 
                 prog.audio.playSound(prog.assets.getSound(SoundIndex.Pause), 0.80);
-                this.menu.activate(0);
+                this.menu.activate(this.savedLevel == 0 ? 0 : 1);
             }
         }        
     }
@@ -192,7 +194,7 @@ export class TitleScreen implements Scene {
 
             return 0;
         }
-        return loadData();
+        return this.savedLevel;
     }
 
 }
