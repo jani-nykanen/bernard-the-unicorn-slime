@@ -9,6 +9,7 @@ import { Menu, MenuButton } from "./menu.js";
 import { ActionIndex } from "./keyconfig.js";
 import { InputFlag } from "./keyboard.js";
 import { loadData } from "./savedata.js";
+import { Sound } from "./sound.js";
 
 
 export class TitleScreen implements Scene {
@@ -30,6 +31,7 @@ export class TitleScreen implements Scene {
         // New game
         new MenuButton("NEW GAME", (button : MenuButton, prog : ProgramInterface) : boolean => {
 
+            this.stopMusic(prog);
             this.startNewGame = true;
             prog.transition.activate(true, 1.0/30.0, (prog : ProgramInterface) : void => {
 
@@ -40,6 +42,7 @@ export class TitleScreen implements Scene {
         // Load game
         new MenuButton("LOAD GAME", (button : MenuButton, prog : ProgramInterface) : boolean => {
 
+            this.stopMusic(prog);
             this.startNewGame = false;
             prog.transition.activate(true, 1.0/30.0, (prog : ProgramInterface) : void => {
 
@@ -49,6 +52,12 @@ export class TitleScreen implements Scene {
         }),
 
         ], false, false);
+    }
+
+
+    private stopMusic(prog : ProgramInterface) : void {
+
+        prog.assets.getSound(SoundIndex.TitleTheme)?.stop();
     }
 
     
@@ -150,12 +159,18 @@ export class TitleScreen implements Scene {
         const PRESS_ENTER_SPEED : number = 1.0/60.0;
         const ENTRANCE_SPEED : number = 1.0/45.0;
 
+        this.waveTimer = (this.waveTimer + WAVE_SPEED*prog.step) % (Math.PI*2);
+
         if (prog.transition.active) {
 
             return;
         }
-
-        this.waveTimer = (this.waveTimer + WAVE_SPEED*prog.step) % (Math.PI*2);
+        
+        const theme : Sound | null = prog.assets.getSound(SoundIndex.TitleTheme);
+        if (theme !== null && !theme.playing) {
+        
+            prog.audio.playSound(theme, 0.80);
+        }
 
         if (this.entranceTimer > 0.0) {
 

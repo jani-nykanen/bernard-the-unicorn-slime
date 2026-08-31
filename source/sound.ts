@@ -32,7 +32,15 @@ export class Sound {
     private ramp : Ramp;
     private attack : number = 0.0;
 
+    private _playing : boolean = false;
+
     private oscillator : OscillatorNode | undefined = undefined;
+
+
+    public get playing() : boolean {
+
+        return this._playing;
+    }
 
 
     constructor(ctx : AudioContext, sequence : number[], 
@@ -47,6 +55,14 @@ export class Sound {
         this.type = type;
         this.ramp = ramp;
         this.attack = attack;
+    }
+
+
+    public stop() : void {
+
+        this.oscillator?.stop();
+        this.oscillator?.disconnect();
+        this._playing = false;
     }
 
 
@@ -101,9 +117,14 @@ export class Sound {
         osc.start(time);
 
         osc.stop(time + timer);
-        osc.onended = () : void => osc.disconnect();
+        osc.onended = () : void => {
+            this._playing = false;
+            osc.disconnect();
+        }
         
         this.oscillator?.disconnect();
         this.oscillator = osc;
+
+        this._playing = true;
     }
 }

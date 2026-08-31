@@ -118,6 +118,7 @@ export class Program implements ProgramInterface {
 
                         this.onAudioPreparedEvent(this);
                         this.audioPrepared = true;
+                        this.activeScene?.init(null, this);
 
                         this.timeSum = 0.0;
                         break;
@@ -136,7 +137,6 @@ export class Program implements ProgramInterface {
                     this.audio.setContext(ctx);
                 });
                 this.onLoadEvent?.(this);
-                this.activeScene?.init(null, this);
                 this.initialized = true;
 
                 this.timeSum = 0.0;

@@ -31,4 +31,6 @@ export const enum SoundIndex {
     Accept = 9,
     Rise = 10,
     CylinderFall = 11,
+
+    TitleTheme = 12,
 }

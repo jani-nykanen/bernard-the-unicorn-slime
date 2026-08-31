@@ -263,4 +263,40 @@ export const createSounds = (audio : AudioPlayer, assets : AssetManager) : void 
         0.60,
         OscType.Sawtooth, 
         Ramp.Exponential)!);
+
+    assets.addSound(SoundIndex.TitleTheme, 
+        audio.createSound(
+        [Note.E3, 15, 0.20,
+         Note.F3, 15, 0.40,
+         Note.G3, 15, 0.60,
+         Note.A3, 15, 0.80, 
+         Note.B3, 15, 0.80,
+         Note.G3, 15, 0.80,
+         Note.B3, 30, 0.80,
+
+         Note.A3 + 6.85, 15, 0.80,
+         Note.F3, 15, 0.80,
+         Note.A3, 30, 0.80,
+         Note.A3 - 6.85, 15, 0.80,
+         Note.F3 - 6.85, 15, 0.80,
+         Note.A3, 30, 0.80,
+        
+         Note.E3, 15, 0.80,
+         Note.F3 + 6.85, 15, 0.80,
+         Note.G3, 15, 0.80,
+         Note.A3, 15, 0.80,
+         Note.B3, 15, 0.80,
+         Note.G3, 15, 0.80,
+         Note.B3, 15, 0.80,
+         Note.E4, 15, 0.80,
+
+         Note.D3, 15, 0.80,
+         Note.B3, 15, 0.80,
+         Note.G3, 15, 0.80,
+         Note.B3, 15, 0.80,
+         Note.E4, 60, 0.80,
+        ],
+        0.90,
+        OscType.Triangle, 
+        Ramp.Instant)!);
 }
