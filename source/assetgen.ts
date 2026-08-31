@@ -200,7 +200,7 @@ export const createSounds = (audio : AudioPlayer, assets : AssetManager) : void 
             Note.A3, 15, 1.0,
             Note.A3, 45, 0.80,
             ], 
-            0.45,
+            0.35,
             OscType.Square, 
             Ramp.Instant)!);
 
@@ -266,37 +266,13 @@ export const createSounds = (audio : AudioPlayer, assets : AssetManager) : void 
 
     assets.addSound(SoundIndex.TitleTheme, 
         audio.createSound(
-        [Note.E3, 15, 0.20,
-         Note.F3, 15, 0.40,
-         Note.G3, 15, 0.60,
-         Note.A3, 15, 0.80, 
-         Note.B3, 15, 0.80,
-         Note.G3, 15, 0.80,
-         Note.B3, 30, 0.80,
-
-         Note.A3 + 6.85, 15, 0.80,
-         Note.F3, 15, 0.80,
-         Note.A3, 30, 0.80,
-         Note.A3 - 6.85, 15, 0.80,
-         Note.F3 - 6.85, 15, 0.80,
-         Note.A3, 30, 0.80,
-        
-         Note.E3, 15, 0.80,
-         Note.F3 + 6.85, 15, 0.80,
-         Note.G3, 15, 0.80,
-         Note.A3, 15, 0.80,
-         Note.B3, 15, 0.80,
-         Note.G3, 15, 0.80,
-         Note.B3, 15, 0.80,
-         Note.E4, 15, 0.80,
-
-         Note.D3, 15, 0.80,
-         Note.B3, 15, 0.80,
-         Note.G3, 15, 0.80,
-         Note.B3, 15, 0.80,
-         Note.E4, 60, 0.80,
+        [Note.E3, 20, 0.40,
+         Note.F3, 10, 0.60,
+         Note.G3, 10, 0.80,
+         Note.A3, 10, 0.80,
+         Note.B3, 30, 1.0,
         ],
-        0.90,
+        1.0,
         OscType.Triangle, 
         Ramp.Instant)!);
 }

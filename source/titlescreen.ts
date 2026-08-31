@@ -22,6 +22,7 @@ export class TitleScreen implements Scene {
 
     private startNewGame : boolean = false;
     private savedLevel : number = 0;
+    private themePlayed : boolean = false;
 
 
     constructor() {
@@ -31,7 +32,6 @@ export class TitleScreen implements Scene {
         // New game
         new MenuButton("NEW GAME", (button : MenuButton, prog : ProgramInterface) : boolean => {
 
-            this.stopMusic(prog);
             this.startNewGame = true;
             prog.transition.activate(true, 1.0/30.0, (prog : ProgramInterface) : void => {
 
@@ -42,7 +42,6 @@ export class TitleScreen implements Scene {
         // Load game
         new MenuButton("LOAD GAME", (button : MenuButton, prog : ProgramInterface) : boolean => {
 
-            this.stopMusic(prog);
             this.startNewGame = false;
             prog.transition.activate(true, 1.0/30.0, (prog : ProgramInterface) : void => {
 
@@ -55,12 +54,6 @@ export class TitleScreen implements Scene {
     }
 
 
-    private stopMusic(prog : ProgramInterface) : void {
-
-        prog.assets.getSound(SoundIndex.TitleTheme)?.stop();
-    }
-
-    
     private drawBackground(canvas : RenderTarget) : void {
 
         canvas.setDrawColor(...MASTER_PALETTE[2]);
@@ -97,7 +90,7 @@ export class TitleScreen implements Scene {
         const SUBTITLE_WAVE_AMPLITUDE : number = 2;
         const SUBTITLE_PERIOD : number = Math.PI*3;
         const PRESS_ENTER_TEXT : string = "PRESS ENTER";
-        const ENTRACE_OFFSET : number = -96;
+        const ENTRACE_OFFSET : number = -92;
 
         canvas.moveTo(0, ENTRACE_OFFSET*this.entranceTimer);
 
@@ -157,7 +150,7 @@ export class TitleScreen implements Scene {
         
         const WAVE_SPEED : number = Math.PI*2/120.0;
         const PRESS_ENTER_SPEED : number = 1.0/60.0;
-        const ENTRANCE_SPEED : number = 1.0/45.0;
+        const ENTRANCE_SPEED : number = 1.0/60.0;
 
         this.waveTimer = (this.waveTimer + WAVE_SPEED*prog.step) % (Math.PI*2);
 
@@ -166,10 +159,10 @@ export class TitleScreen implements Scene {
             return;
         }
         
-        const theme : Sound | null = prog.assets.getSound(SoundIndex.TitleTheme);
-        if (theme !== null && !theme.playing) {
-        
-            prog.audio.playSound(theme, 0.80);
+        if (!this.themePlayed) {
+            
+            prog.audio.playSound( prog.assets.getSound(SoundIndex.TitleTheme), 1.0);
+            this.themePlayed = true;
         }
 
         if (this.entranceTimer > 0.0) {
