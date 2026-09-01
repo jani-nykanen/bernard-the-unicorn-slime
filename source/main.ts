@@ -42,6 +42,5 @@ window.onload = () : void => (new Program(160, 144, 60, 0.60,
     (prog : ProgramInterface) : void => {
 
         createSounds(prog.audio, prog.assets);
-        prog.transition.activate(false, 1.0/30.0);
 
     })).run();

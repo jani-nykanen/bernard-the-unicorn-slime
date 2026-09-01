@@ -9,11 +9,28 @@ import { Menu, MenuButton } from "./menu.js";
 import { ActionIndex } from "./keyconfig.js";
 import { InputFlag } from "./keyboard.js";
 import { loadData } from "./savedata.js";
-import { Sound } from "./sound.js";
+import { clamp } from "./math.js";
+import { drawFadingText } from "./utility.js";
+
+
+const INTRO_TEXT : string[] = 
+[
+` A GAME BY
+JANI NYK@NEN`,
+`  MADE FOR  
+ JS13K 2026 `
+];
+
+
+const TRANSITION_TIME : number = 20;
+const WAIT_TIME : number = 40;
 
 
 export class TitleScreen implements Scene {
 
+
+    private phase : number = 0;
+    private transitionTimer : number = 0;
 
     private waveTimer : number = 0.0;
     private pressStartTimer : number = 1.0;
@@ -22,7 +39,6 @@ export class TitleScreen implements Scene {
 
     private startNewGame : boolean = false;
     private savedLevel : number = 0;
-    private themePlayed : boolean = false;
 
 
     constructor() {
@@ -138,6 +154,27 @@ export class TitleScreen implements Scene {
     }
 
 
+    private drawIntro(canvas : RenderTarget, assets : AssetManager) : void {
+
+        canvas.setDrawColor(...MASTER_PALETTE[0]);
+        canvas.clear();
+
+        let t : number = 1.0;
+        if (this.transitionTimer < TRANSITION_TIME) {
+
+            t = this.transitionTimer/TRANSITION_TIME;
+        }
+        else if (this.transitionTimer > TRANSITION_TIME + WAIT_TIME) {
+
+            t = 1.0 - (this.transitionTimer - (TRANSITION_TIME + WAIT_TIME))/TRANSITION_TIME;
+        }
+
+        const dx : number = canvas.width/2 - 6*8;
+        const dy : number = canvas.height/2 - 8;
+
+        drawFadingText(INTRO_TEXT[this.phase], canvas, assets, dx, dy, t);
+    }
+
 
     public init(param : SceneChangeParameter, prog : ProgramInterface): void {
         
@@ -150,19 +187,35 @@ export class TitleScreen implements Scene {
         
         const WAVE_SPEED : number = Math.PI*2/120.0;
         const PRESS_ENTER_SPEED : number = 1.0/60.0;
-        const ENTRANCE_SPEED : number = 1.0/60.0;
+        const ENTRANCE_SPEED : number = 1.0/45.0;
+
+        if (this.phase < 2) {
+
+            this.transitionTimer += prog.step;
+            if (prog.keyboard.anyPressed && this.transitionTimer > TRANSITION_TIME) {
+
+                this.transitionTimer = Math.max(this.transitionTimer, TRANSITION_TIME + WAIT_TIME);
+            }
+
+            if (this.transitionTimer > TRANSITION_TIME*2 + WAIT_TIME) {
+
+                this.transitionTimer = 0;
+                ++ this.phase;
+
+                if (this.phase == 2) {
+
+                    prog.transition.activate(false, 1.0/30.0);
+                    prog.audio.playSound( prog.assets.getSound(SoundIndex.TitleTheme), 1.0);
+                }
+            }
+            return;
+        }
 
         this.waveTimer = (this.waveTimer + WAVE_SPEED*prog.step) % (Math.PI*2);
 
         if (prog.transition.active) {
 
             return;
-        }
-        
-        if (!this.themePlayed) {
-            
-            prog.audio.playSound( prog.assets.getSound(SoundIndex.TitleTheme), 1.0);
-            this.themePlayed = true;
         }
 
         if (this.entranceTimer > 0.0) {
@@ -186,6 +239,12 @@ export class TitleScreen implements Scene {
 
     public redraw(canvas : RenderTarget, assets : AssetManager) : void {
         
+        if (this.phase < 2) {
+
+            this.drawIntro(canvas, assets);
+            return;
+        }
+
         this.drawBackground(canvas);
         this.drawLogo(canvas, assets);
 

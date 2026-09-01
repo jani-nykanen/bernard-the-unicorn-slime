@@ -6,6 +6,7 @@ import { RenderTarget } from "./rendertarget.js";
 import { Scene, SceneChangeParameter } from "./scene.js";
 import { BitmapIndex, SoundIndex } from "./assetindex.js";
 import { clamp } from "./math.js";
+import { drawFadingText } from "./utility.js";
 
 
 const TEXT : string[] =
@@ -34,8 +35,6 @@ export class Intro implements Scene {
     private textHeight : number = 0;
     private text : string = "";
 
-    private fonts : Bitmap[] = [];
-
 
     constructor() {}
 
@@ -52,14 +51,6 @@ export class Intro implements Scene {
         this.textHeight = lines.length;
 
         prog.transition.deactivate();
-
-        if (this.fonts.length == 0) {
-
-            for (let i : number = 0; i < 4; ++ i) {
-
-                this.fonts[i] = prog.assets.getBitmap(BitmapIndex.FontBlack + i)!;
-            }
-        }
     }
 
 
@@ -101,9 +92,6 @@ export class Intro implements Scene {
 
             t = this.fadingIn ? this.fadeTimer : 1.0 - this.fadeTimer;
         }
-        const fontIndex : number = clamp(Math.floor(t*4.0), 0, 3);
-
-        const font : Bitmap = this.fonts[fontIndex];
 
         const dx : number = canvas.width/2 - this.textWidth*4;
         const dy : number = canvas.height/2 - this.textHeight*4;
@@ -112,15 +100,16 @@ export class Intro implements Scene {
 
             const dw : number = this.textWidth*8;
             const dh : number = this.textHeight*8;
+            const colorIndex : number = clamp(Math.floor(t*4.0), 0, 3);
 
-            canvas.setDrawColor(...MASTER_PALETTE[fontIndex]);
+            canvas.setDrawColor(...MASTER_PALETTE[colorIndex]);
             canvas.fillRect(dx - 4, dy - 4, dw + 8, dh + 8);
 
             canvas.setDrawColor(...MASTER_PALETTE[0]);
             canvas.fillRect(dx - 3, dy - 3, dw + 6, dh + 6);
         }
 
-        canvas.drawText(font, this.text, dx, dy);
+        drawFadingText(this.text, canvas, assets, dx, dy, t);
     }
 
 
