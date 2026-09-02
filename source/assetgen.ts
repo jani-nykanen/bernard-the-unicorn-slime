@@ -266,13 +266,14 @@ export const createSounds = (audio : AudioPlayer, assets : AssetManager) : void 
 
     assets.addSound(SoundIndex.TitleTheme, 
         audio.createSound(
-        [Note.E3, 20, 0.40,
-         Note.F3, 10, 0.60,
-         Note.G3, 10, 0.80,
-         Note.A3, 10, 0.80,
-         Note.B3, 30, 1.0,
+        [Note.F2, 24, 0.40,
+         Note.E2, 8, 0.60,
+         Note.G2, 8, 0.80,
+         Note.F2, 8, 1.0,
+         Note.A2, 8, 1.0,
+         Note.B2, 24, 1.0,
         ],
-        1.0,
-        OscType.Triangle, 
+        0.30,
+        OscType.Sawtooth, 
         Ramp.Instant)!);
 }
