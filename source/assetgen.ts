@@ -1,8 +1,5 @@
-import { Program, ProgramInterface } from "./program.js";
-import { Game } from "./game.js";
 import { BitmapIndex, SoundIndex } from "./assetindex.js"
 import { MASTER_PALETTE } from "./palette.js";
-import { initKeyConfig } from "./keyconfig.js";
 import { AssetManager } from "./assetmanager.js";
 import { Bitmap } from "./bitmap.js";
 import { RenderTarget } from "./rendertarget.js";
@@ -266,12 +263,10 @@ export const createSounds = (audio : AudioPlayer, assets : AssetManager) : void 
 
     assets.addSound(SoundIndex.TitleTheme, 
         audio.createSound(
-        [Note.F2, 24, 0.40,
-         Note.E2, 8, 0.60,
-         Note.G2, 8, 0.80,
-         Note.F2, 8, 1.0,
-         Note.A2, 8, 1.0,
-         Note.B2, 24, 1.0,
+        [Note.G2, 30, 0.55,
+         Note.F2, 20, 0.70,
+         Note.A2, 10, 0.85,
+         Note.B2, 30, 1.0,
         ],
         0.30,
         OscType.Sawtooth, 
