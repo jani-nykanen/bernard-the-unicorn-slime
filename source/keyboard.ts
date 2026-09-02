@@ -22,16 +22,36 @@ export type InputState = {
 const defaultState = () : InputState => {return {timestamp: 0.0, flag: InputFlag.Up};}
 
 
+const updateStateArray = (states : Map<string, InputState>) : void => {
+
+    for (const k of states.keys()) {
+
+        const state : InputState = states.get(k)!;
+        if (state.flag === InputFlag.Pressed) {
+
+            state.flag = InputFlag.Down;
+        }
+        else if (state.flag == InputFlag.Released) {
+
+            state.flag = InputFlag.Up;
+        }
+    }
+}
+
+
 class Action {
     
 
     public keys : string[];
+    public specialKeys : string[];
+
     public state : InputState = defaultState();
 
 
-    constructor(keys : string[]) {
+    constructor(keys : string[], specialKeys : string[] = []) {
 
         this.keys = Array.from(keys);
+        this.specialKeys = Array.from(specialKeys);
     }
 }
 
@@ -40,7 +60,11 @@ export class Keyboard {
 
 
     private states : Map<string, InputState>;
+    private specialStates : Map<string, InputState>; 
+
     private prevent : Set<string>;
+    private preventSpecial : Set<string>;
+
     private actions : Map<number, Action>;
 
     private _anyPressed : boolean = false;
@@ -59,18 +83,22 @@ export class Keyboard {
     constructor() {
 
         this.states = new Map<string, InputState> ();
+        this.specialStates = new Map<string, InputState> ();
+
         this.prevent = new Set<string> ();
+        this.preventSpecial = new Set<string> ();
+
         this.actions = new Map<number, Action> ();
     }
 
 
-    private keyEvent(key : string, pressed : boolean, timestamp : number) : void {
+    private keyEvent(states : Map<string, InputState>, key : string, pressed : boolean, timestamp : number) : void {
 
-        let state : InputState | undefined = this.states.get(key);
+        let state : InputState | undefined = states.get(key);
         if (state === undefined) {
 
             state = defaultState();
-            this.states.set(key, state);
+            states.set(key, state);
         }
 
         if (pressed) {
@@ -95,12 +123,17 @@ export class Keyboard {
     }
 
 
-    public addAction(id : number, keys : string[], prevent : boolean = true) : void {
+    public addAction(id : number, keys : string[], specialKeys : string[] = [], prevent : boolean = true) : void {
 
-        this.actions.set(id, new Action(keys));
+        this.actions.set(id, new Action(keys, specialKeys));
         if (prevent) {
 
             for (const k of keys) {
+
+                this.prevent.add(k);
+            }
+
+            for (const k of specialKeys) {
 
                 this.prevent.add(k);
             }
@@ -110,18 +143,9 @@ export class Keyboard {
 
     public updateStates() : void {
 
-        for (const k of this.states.keys()) {
-
-            const state : InputState = this.states.get(k)!;
-            if (state.flag === InputFlag.Pressed) {
-
-                state.flag = InputFlag.Down;
-            }
-            else if (state.flag == InputFlag.Released) {
-
-                state.flag = InputFlag.Up;
-            }
-        }
+        updateStateArray(this.states);
+        updateStateArray(this.specialStates);
+        
         this._anyPressed = false;
     }
 
@@ -132,9 +156,30 @@ export class Keyboard {
 
             a.state.timestamp = 0.0;
             a.state.flag = InputFlag.Up;
+
+            // Normal keys
             for (const k of a.keys) {
 
                 const state : InputState | undefined = this.states.get(k);
+                if (state === undefined || 
+                    state.flag === InputFlag.Up || 
+                    state.timestamp < a.state.timestamp) {
+
+                    continue;
+                }
+                a.state.flag = state.flag;
+                a.state.timestamp = state.timestamp;
+            }
+            if (a.state.flag != InputFlag.Up) {
+
+                continue;
+            }
+            a.state.timestamp = 0;
+
+            // "Special" keys
+            for (const k of a.specialKeys) {
+
+                const state : InputState | undefined = this.specialStates.get(k);
                 if (state === undefined || 
                     state.flag === InputFlag.Up || 
                     state.timestamp < a.state.timestamp) {
@@ -180,8 +225,9 @@ export class Keyboard {
                 return;
             }
 
-            this.keyEvent(e.code, true, e.timeStamp);
-            if (this.prevent.has(e.code)) {
+            this.keyEvent(this.states, e.code, true, e.timeStamp);
+            this.keyEvent(this.specialStates, e.key, true, e.timeStamp);
+            if (this.prevent.has(e.code) || this.preventSpecial.has(e.key)) {
 
                 e.preventDefault();
             }
@@ -189,8 +235,9 @@ export class Keyboard {
         });
         window.addEventListener("keyup", (e : KeyboardEvent) : void  => {
 
-           this.keyEvent(e.code, false, e.timeStamp);
-            if (this.prevent.has(e.code)) {
+           this.keyEvent(this.states, e.code, false, e.timeStamp);
+           this.keyEvent(this.specialStates, e.key, false, e.timeStamp);
+            if (this.prevent.has(e.code) || this.preventSpecial.has(e.key)) {
 
                 e.preventDefault();
             }
