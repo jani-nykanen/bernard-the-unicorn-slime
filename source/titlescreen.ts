@@ -1,3 +1,8 @@
+/* 
+ * License: GNU General Public License v3
+ * Copyright 2026 Jani Nykänen
+ */
+
 import { AssetManager } from "./assetmanager.js";
 import { Bitmap } from "./bitmap.js";
 import { MASTER_PALETTE } from "./palette.js";
@@ -9,7 +14,6 @@ import { Menu, MenuButton } from "./menu.js";
 import { ActionIndex } from "./keyconfig.js";
 import { InputFlag } from "./keyboard.js";
 import { loadData } from "./savedata.js";
-import { clamp } from "./math.js";
 import { drawFadingText } from "./utility.js";
 
 

@@ -1,3 +1,8 @@
+/* 
+ * License: GNU General Public License v3
+ * Copyright 2026 Jani Nykänen
+ */
+
 import { Bitmap } from "./bitmap.js";
 import { DepthObject } from "./depthobject.js";
 import { isometricProjection } from "./math.js";

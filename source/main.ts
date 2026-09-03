@@ -1,3 +1,8 @@
+/* 
+ * License: GNU General Public License v3
+ * Copyright 2026 Jani Nykänen
+ */
+
 import { Program, ProgramInterface } from "./program.js";
 import { Game } from "./game.js";
 import { BitmapIndex } from "./assetindex.js"

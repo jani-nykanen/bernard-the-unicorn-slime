@@ -1,3 +1,8 @@
+/* 
+ * License: GNU General Public License v3
+ * Copyright 2026 Jani Nykänen
+ */
+
 import { Keyboard } from "./keyboard.js";
 import { Renderer } from "./renderer.js";
 import { Scene, SceneChangeParameter } from "./scene.js";

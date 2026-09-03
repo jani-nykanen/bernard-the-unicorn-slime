@@ -1,3 +1,8 @@
+/* 
+ * License: GNU General Public License v3
+ * Copyright 2026 Jani Nykänen
+ */
+
 import { GameObject, GameObjectType } from "./gameobject.js";
 import { Vector } from "./vector.js";
 import { Tile, TileFlags } from "./tile.js";

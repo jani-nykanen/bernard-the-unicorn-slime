@@ -1,3 +1,8 @@
+/* 
+ * License: GNU General Public License v3
+ * Copyright 2026 Jani Nykänen
+ */
+
 import { AssetManager } from "./assetmanager.js";
 import { ProgramInterface } from "./program.js";
 import { RenderTarget } from "./rendertarget.js";

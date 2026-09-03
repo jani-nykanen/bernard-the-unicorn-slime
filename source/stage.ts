@@ -1,3 +1,8 @@
+/* 
+ * License: GNU General Public License v3
+ * Copyright 2026 Jani Nykänen
+ */
+
 import { BitmapIndex, SoundIndex } from "./assetindex.js";
 import { AssetManager } from "./assetmanager.js";
 import { Bitmap } from "./bitmap.js";
@@ -78,8 +83,6 @@ export class Stage {
             // NOTE: Nonexistent objects are also pushed to the buffer,
             // because... well, I tried to change this but things went
             // wrong.
-            // TODO: Perhaps worth fixing, then?
-
             this.info.pos.makeEqual(o.logicalPos);
             this.info.type = o.type;
             this.info.active = o.exists;

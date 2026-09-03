@@ -1,3 +1,7 @@
+/* 
+ * License: GNU General Public License v3
+ * Copyright 2026 Jani Nykänen
+ */
 
 
 export const LOCALSTORAGE_KEY : string = "__jn1";

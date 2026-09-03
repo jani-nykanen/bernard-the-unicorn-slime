@@ -1,3 +1,8 @@
+/* 
+ * License: GNU General Public License v3
+ * Copyright 2026 Jani Nykänen
+ */
+
 import { BitmapIndex, SoundIndex } from "./assetindex.js";
 import { AssetManager } from "./assetmanager.js";
 import { Bitmap } from "./bitmap.js";
@@ -57,8 +62,6 @@ export class Game implements Scene {
         this.stage = new Stage(LEVEL_DATA[this.levelIndex]);
         // Yes, pause menu needs to be recreated each time to make
         // undo and restart work properly.
-        // TODO: Maybe do not recreate the whole stage object each
-        // time...?
         this.pauseMenu = createPauseMenu(this.stage, () => {
 
             prog.transition.activate(true, 1.0/30.0, (prog : ProgramInterface) : void => {

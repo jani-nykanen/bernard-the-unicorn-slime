@@ -23,7 +23,8 @@ linecount:
 
 .PHONY: levels
 levels:
-	echo -n "export const LEVEL_DATA : string[] = [" > $(LEVEL_SRC_PATH)
+	printf "/*\n * License: GNU General Public License v3\n * Copyright 2026 Jani Nykänen\n*/\n" > $(LEVEL_SRC_PATH)
+	echo -n "export const LEVEL_DATA : string[] = [" >> $(LEVEL_SRC_PATH)
 	$(MAPCONV) $(LEVEL_FOLDER)/1.tmx >> $(LEVEL_SRC_PATH)
 	$(MAPCONV) $(LEVEL_FOLDER)/2.tmx >> $(LEVEL_SRC_PATH)
 	$(MAPCONV) $(LEVEL_FOLDER)/3.tmx >> $(LEVEL_SRC_PATH)

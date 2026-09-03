@@ -1,3 +1,8 @@
+/* 
+ * License: GNU General Public License v3
+ * Copyright 2026 Jani Nykänen
+ */
+
 import { Bitmap } from "./bitmap.js";
 import { ProgramInterface } from "./program.js";
 import { Flip, RenderTarget } from "./rendertarget.js";

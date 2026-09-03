@@ -1,3 +1,8 @@
+/* 
+ * License: GNU General Public License v3
+ * Copyright 2026 Jani Nykänen
+ */
+
 import { Bitmap } from "./bitmap.js";
 import { RenderTarget } from "./rendertarget.js";
 import { Vector } from "./vector.js";

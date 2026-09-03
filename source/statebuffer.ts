@@ -1,7 +1,11 @@
+/* 
+ * License: GNU General Public License v3
+ * Copyright 2026 Jani Nykänen
+ */
+
 import { Direction } from "./direction.js";
 import { GameObjectType } from "./gameobject.js";
 import { Vector } from "./vector.js";
-
 
 
 export class ObjectInfo {

@@ -1,3 +1,8 @@
+/* 
+ * License: GNU General Public License v3
+ * Copyright 2026 Jani Nykänen
+ */
+
 import { clamp, signedMod } from "./math.js";
 import { Bitmap } from "./bitmap.js";
 import { ProgramInterface } from "./program.js";

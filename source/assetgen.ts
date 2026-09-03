@@ -1,3 +1,8 @@
+/* 
+ * License: GNU General Public License v3
+ * Copyright 2026 Jani Nykänen
+ */
+
 import { BitmapIndex, SoundIndex } from "./assetindex.js"
 import { MASTER_PALETTE } from "./palette.js";
 import { AssetManager } from "./assetmanager.js";
