@@ -2,7 +2,7 @@ import { BitmapIndex, SoundIndex } from "./assetindex.js"
 import { MASTER_PALETTE } from "./palette.js";
 import { AssetManager } from "./assetmanager.js";
 import { Bitmap } from "./bitmap.js";
-import { RenderTarget } from "./rendertarget.js";
+import { Flip, RenderTarget } from "./rendertarget.js";
 import { AudioPlayer } from "./audioplayer.js";
 import { OscType, Ramp } from "./sound.js";
 
@@ -50,6 +50,88 @@ const enum Note {
 }
 
 
+const convertMonochrome = (source : Bitmap, palette : number[], 
+    alphaThreshold : number) : Bitmap => {
+
+    const output : HTMLCanvasElement = document.createElement("canvas");
+    output.width = source.width;
+    output.height = source.height;
+    const ctx : CanvasRenderingContext2D = output.getContext("2d")!;
+
+    ctx.drawImage(source, 0, 0);
+
+    const imageData : ImageData = ctx.getImageData(0, 0, source.width, source.height);
+    const pixels : ImageDataArray = imageData.data;
+
+    for (let i : number = 0; i < pixels.length/4; ++ i) {
+
+        for (let j : number = 0; j < 3; ++ j) {
+
+            pixels[i*4 + j] = palette[j];
+        }
+
+           pixels[i*4 + 3] = pixels[i*4 + 3] < alphaThreshold ? 0 : 255;
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+    return output;
+}
+
+
+const applyPaletteToTile = (pixels : ImageDataArray, 
+    dx : number, dy : number, dw : number, dh : number, offset : number,
+    alphaMask : number, palette : number[][]) : void => {
+
+    for (let y : number = dy; y < dy + dh; ++ y) {
+
+        for (let x : number = dx; x < dx + dw; ++ x) {
+
+            const i : number = y*offset + x;
+            const colorIndex : number = Math.round(pixels[i*4]/85);
+            const paletteEntry : number[] = palette[colorIndex];
+
+            for (let j : number = 0; j < 3; ++ j) {
+
+                pixels[i*4 + j] = paletteEntry[j] ?? 255;
+            }
+            pixels[i*4 + 3] = Number(colorIndex != alphaMask)*255;
+        }
+    }
+}
+
+
+const applyPalette = (source : Bitmap, palette : number[][], alphaLookUp : number[]) : Bitmap => {
+
+    const output : HTMLCanvasElement = document.createElement("canvas");
+    output.width = source.width;
+    output.height = source.height;
+    const ctx : CanvasRenderingContext2D = output.getContext("2d")!;
+
+    ctx.drawImage(source, 0, 0);
+
+    const imageData : ImageData = ctx.getImageData(0, 0, source.width, source.height);
+    const pixels : ImageDataArray = imageData.data;
+    
+    const w : number = (output.width/8) | 0;
+    const h : number = (output.height/8) | 0;
+
+    let j : number = 0;
+    for (let y : number = 0; y < h; ++ y) {
+
+        for (let x : number = 0; x < w; ++ x) {
+
+            const alphaMask : number = (alphaLookUp[j] ?? 0) - 1;
+            applyPaletteToTile(pixels, x*8, y*8, 8, 8, 
+            source.width, alphaMask, palette);
+            ++ j;
+        }
+    }
+    ctx.putImageData(imageData, 0, 0);
+    
+    return output;
+}
+
+
 const generateMoon = () : Bitmap => {
 
     const RADIUS : number = 20;
@@ -92,8 +174,7 @@ const generateRainbow = () : Bitmap => {
 }
 
 
-
-export const generateLogo = () : Bitmap => {
+const generateLogoRaw = () : Bitmap => {
 
     const WIDTH : number = 144;
     const HEIGHT : number = 64;
@@ -117,21 +198,42 @@ export const generateLogo = () : Bitmap => {
 }
 
 
+const generateLogoFinal = (black : Bitmap, white : Bitmap) : Bitmap => {
+
+    const canvas : RenderTarget = new RenderTarget(160, 96, null);
+    
+    const dx : number = canvas.width/2 - black.width/2;
+    const dy : number = 0;
+
+    for (let i : number = -1; i <= 1; ++ i) {
+    
+        for (let j : number = -1; j <= 2; ++ j) {
+    
+            canvas.drawBitmap(black, Flip.None, dx + i, dy + j);
+        }
+    }
+    canvas.drawBitmap(white, Flip.None, dx, dy);
+
+    return canvas.toBitmap();
+}
+
+
 export const generateBitmaps = (assets : AssetManager) : void => {
 
     const LOGO_ALPHA_THRESHOLD : number = 127;
 
     // Base tileset
-    assets.applyPalette(
-        BitmapIndex.BaseRaw, BitmapIndex.Base, 
-        MASTER_PALETTE, ALPHA_MASK);
+    const raw : Bitmap = assets.getBitmap(BitmapIndex.BaseRaw)!;
+    assets.addBitmap(BitmapIndex.Base, applyPalette(raw, MASTER_PALETTE, ALPHA_MASK));
 
     // Fonts
     const fontAlphaMask : number[] = (new Array<number> (16*4)).fill(1);
+    const fontRaw : Bitmap = assets.getBitmap(BitmapIndex.FontRaw)!;
     for (let i : number = 0; i < 4; ++ i) {
 
-        assets.applyPalette(BitmapIndex.FontRaw, BitmapIndex.FontBlack + i, 
-            [[0, 0, 0], [0, 0, 0], [0, 0, 0], MASTER_PALETTE[i]], fontAlphaMask);
+        const palette : number[][] = [[0, 0, 0], [0, 0, 0], [0, 0, 0], MASTER_PALETTE[i]];
+        const font : Bitmap = applyPalette(fontRaw, palette, fontAlphaMask);
+        assets.addBitmap(BitmapIndex.FontBlack + i, font);
     }
     
     // Misc
@@ -139,11 +241,12 @@ export const generateBitmaps = (assets : AssetManager) : void => {
     assets.addBitmap(BitmapIndex.Rainbow, generateRainbow());
 
     // Logo
-    const logoRaw : Bitmap = generateLogo();
-    assets.convertMonochrome(BitmapIndex.LogoBlack, logoRaw, 
+    const logoRaw : Bitmap = generateLogoRaw();
+    const logoBlack : Bitmap = convertMonochrome(logoRaw, 
         MASTER_PALETTE[0], LOGO_ALPHA_THRESHOLD);
-    assets.convertMonochrome(BitmapIndex.LogoWhite, logoRaw, 
+    const logoWhite : Bitmap = convertMonochrome(logoRaw, 
         MASTER_PALETTE[3], LOGO_ALPHA_THRESHOLD);
+    assets.addBitmap(BitmapIndex.Logo, generateLogoFinal(logoBlack, logoWhite));
 }
 
 

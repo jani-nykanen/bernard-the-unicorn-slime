@@ -99,10 +99,8 @@ export class TitleScreen implements Scene {
 
     private drawLogo(canvas : RenderTarget, assets : AssetManager) : void {
 
-        // TODO: Maybe draw this to a bitmap in advance?
-
         const SUBTITLE : string = "SAVES THE RAINBOWS"
-        const SUBTITLE_OFFSET_Y : number = 72;
+        const SUBTITLE_OFFSET_Y : number = 74;
         const SUBTITLE_WAVE_AMPLITUDE : number = 2;
         const SUBTITLE_PERIOD : number = Math.PI*3;
         const PRESS_ENTER_TEXT : string = "PRESS ENTER";
@@ -110,12 +108,11 @@ export class TitleScreen implements Scene {
 
         canvas.moveTo(0, ENTRACE_OFFSET*this.entranceTimer);
 
-        const bmpLogoBlack : Bitmap = assets.getBitmap(BitmapIndex.LogoBlack)!;
-        const bmpLogoWhite : Bitmap = assets.getBitmap(BitmapIndex.LogoWhite)!;
+        const bmpLogo : Bitmap = assets.getBitmap(BitmapIndex.Logo)!;
         const bmpFontBlack : Bitmap = assets.getBitmap(BitmapIndex.FontBlack)!;
         const bmpFontWhite : Bitmap = assets.getBitmap(BitmapIndex.FontWhite)!;
 
-        const dx : number = canvas.width/2 - bmpLogoBlack.width/2;
+        const dx : number = canvas.width/2 - bmpLogo.width/2;
         const dy : number = 8;
         const subtitleX : number = canvas.width/2;
         const subtitleY : number = dy + SUBTITLE_OFFSET_Y;
@@ -124,11 +121,14 @@ export class TitleScreen implements Scene {
         const pressEnterY : number = canvas.height - 32;
         const drawPressEnter : boolean = this.pressStartTimer < 0.5;
 
+        // Logo
+        canvas.drawBitmap(bmpLogo, Flip.None, dx, dy);
+
+        // Subtitle & "Press enter"
         for (let i : number = -1; i <= 1; ++ i) {
 
             for (let j : number = -1; j <= 2; ++ j) {
 
-                canvas.drawBitmap(bmpLogoBlack, Flip.None, dx + i, dy + j);
                 canvas.drawText(bmpFontBlack, SUBTITLE, 
                     subtitleX + i, subtitleY + j, Align.Center,
                     SUBTITLE_PERIOD, SUBTITLE_WAVE_AMPLITUDE, this.waveTimer);
@@ -140,7 +140,6 @@ export class TitleScreen implements Scene {
                 }
             }
         }
-        canvas.drawBitmap(bmpLogoWhite, Flip.None, dx, dy);
         canvas.drawText(bmpFontWhite, SUBTITLE, 
             subtitleX, subtitleY, Align.Center,
             SUBTITLE_PERIOD, SUBTITLE_WAVE_AMPLITUDE, this.waveTimer);
@@ -149,7 +148,6 @@ export class TitleScreen implements Scene {
             canvas.drawText(bmpFontWhite, PRESS_ENTER_TEXT, 
                 pressEnterX, pressEnterY, Align.Center);
         }
-
         canvas.moveTo();
     }
 
